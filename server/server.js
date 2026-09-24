@@ -25,7 +25,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
+  origin: true,
   credentials: true
 }));
 app.use(express.json({ limit: "10mb" }));
@@ -65,18 +65,38 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// Initialize Database, Seed initial demo records & start server
-async function startServer() {
-  await connectDB();
-  await seedDatabase();
+let isInitialized = false;
+async function initializeApp() {
+  if (!isInitialized) {
+    await connectDB();
+    await seedDatabase();
+    isInitialized = true;
+  }
+}
 
-  app.listen(PORT, () => {
-    console.log(`====================================================`);
-    console.log(`?? FoodResQ Backend API running on port ${PORT}`);
-    console.log(`?? URL: http://localhost:${PORT}`);
-    console.log(`?? AI Engine: Active (5 Modules Enabled)`);
-    console.log(`====================================================`);
+// Ensure database and seed store are ready on serverless calls
+app.use(async (req, res, next) => {
+  if (!isInitialized) {
+    try {
+      await initializeApp();
+    } catch (err) {
+      console.warn("DB init warning:", err.message);
+    }
+  }
+  next();
+});
+
+// Start local listener only if not running inside Vercel serverless environment
+if (!process.env.VERCEL) {
+  initializeApp().then(() => {
+    app.listen(PORT, () => {
+      console.log(`====================================================`);
+      console.log(`?? FoodResQ Backend API running on port ${PORT}`);
+      console.log(`?? URL: http://localhost:${PORT}`);
+      console.log(`?? AI Engine: Active (5 Modules Enabled)`);
+      console.log(`====================================================`);
+    });
   });
 }
 
-startServer();
+export default app;
