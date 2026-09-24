@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { connectDB } from "./config/db.js";
+import { connectDB, getDbStatus } from "./config/db.js";
 import { seedDatabase } from "./services/seedService.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
@@ -49,6 +49,7 @@ app.get("/api/health", (req, res) => {
     status: "online",
     platform: "FoodResQ - AI-Powered Food Rescue & Waste Intelligence",
     version: "1.0.0",
+    database: getDbStatus(),
     aiModules: [
       "AI-Module-1: Food Recognition",
       "AI-Module-2: Food Safety / Risk Prediction",
