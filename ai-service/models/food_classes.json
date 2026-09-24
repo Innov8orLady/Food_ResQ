@@ -1,0 +1,99 @@
+[
+  {
+    "id": "pizza",
+    "name": "Woodfired Oven Pizza / Margherita Slices",
+    "category": "Cooked Meals",
+    "dietary": "Vegetarian",
+    "base_safe_hours": 5,
+    "tags": [
+      "Baked",
+      "Cheese",
+      "High Demand",
+      "Perishable"
+    ]
+  },
+  {
+    "id": "bread_bakery",
+    "name": "Bakery Assortment & Fresh Bread",
+    "category": "Bakery & Bread",
+    "dietary": "Vegetarian",
+    "base_safe_hours": 36,
+    "tags": [
+      "Baked",
+      "Ready to Eat",
+      "Low Perishability"
+    ]
+  },
+  {
+    "id": "rice_curry_thali",
+    "name": "North Indian Thali / Rice & Dal Meal",
+    "category": "Cooked Meals",
+    "dietary": "Vegetarian",
+    "base_safe_hours": 5,
+    "tags": [
+      "Cooked",
+      "Staple",
+      "High Demand"
+    ]
+  },
+  {
+    "id": "burger_sandwich",
+    "name": "Gourmet Sandwiches & Fast Food",
+    "category": "Cooked Meals",
+    "dietary": "Vegetarian",
+    "base_safe_hours": 6,
+    "tags": [
+      "Snack",
+      "Fast Food",
+      "Ready to Eat"
+    ]
+  },
+  {
+    "id": "pasta_noodles",
+    "name": "Italian Pasta & Asian Noodles",
+    "category": "Cooked Meals",
+    "dietary": "Vegetarian",
+    "base_safe_hours": 5,
+    "tags": [
+      "Cooked",
+      "Staple",
+      "High Demand"
+    ]
+  },
+  {
+    "id": "fresh_produce_salad",
+    "name": "Fresh Farm Produce & Seasonal Fruit",
+    "category": "Fresh Produce",
+    "dietary": "Vegan",
+    "base_safe_hours": 72,
+    "tags": [
+      "Raw",
+      "Fresh",
+      "Nutritious"
+    ]
+  },
+  {
+    "id": "dairy_dessert",
+    "name": "Fresh Dairy & Desserts Assortment",
+    "category": "Dairy Products",
+    "dietary": "Vegetarian",
+    "base_safe_hours": 18,
+    "tags": [
+      "Dairy",
+      "Perishable",
+      "Cold Chain"
+    ]
+  },
+  {
+    "id": "chicken_poultry",
+    "name": "Non-Veg Meal / Chicken & Meat",
+    "category": "Cooked Meals",
+    "dietary": "Non-Vegetarian",
+    "base_safe_hours": 4,
+    "tags": [
+      "Cooked",
+      "Protein",
+      "Perishable"
+    ]
+  }
+]
