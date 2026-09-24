@@ -5,13 +5,15 @@ import {
   toggleUserVerification,
   getNotifications,
   markNotificationRead,
-  changePassword
+  changePassword,
+  purgeDemoData
 } from "../controllers/userController.js";
 import { protect, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
 
 router.get("/", protect, authorize("admin"), getAllUsers);
+router.post("/purge-fake-records", protect, authorize("admin"), purgeDemoData);
 router.put("/profile", protect, updateUserProfile);
 router.put("/change-password", protect, changePassword);
 router.put("/:id/verify", protect, authorize("admin"), toggleUserVerification);

@@ -2,26 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { UtensilsCrossed, Bell, User, LogOut, ChevronDown, Menu, X, Sparkles } from 'lucide-react';
+import { UtensilsCrossed, Bell, User, LogOut, ChevronDown, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
-  const { user, logout, quickDemoLogin } = useAuth();
+  const { user, logout } = useAuth();
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-
-  const handleDemo = async (role) => {
-    try {
-      await quickDemoLogin(role);
-      if (role === 'donor') navigate('/donor/dashboard');
-      else if (role === 'recipient') navigate('/recipient/dashboard');
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const getDashboardLink = () => {
     if (!user) return '/login';
@@ -57,16 +47,6 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            {!user && (
-              <div className="flex items-center bg-slate-100/90 rounded-xl p-1 border border-slate-200 text-xs">
-                <span className="text-[11px] font-bold text-slate-400 px-2 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-emerald-500" /> Demo:
-                </span>
-                <button onClick={() => handleDemo('donor')} className="px-2.5 py-1 rounded-lg font-semibold text-slate-700 hover:bg-emerald-600 hover:text-white transition-all">Donor</button>
-                <button onClick={() => handleDemo('recipient')} className="px-2.5 py-1 rounded-lg font-semibold text-slate-700 hover:bg-emerald-600 hover:text-white transition-all">NGO</button>
-              </div>
-            )}
-
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="relative">

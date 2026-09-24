@@ -99,3 +99,13 @@ export const changePassword = async (req, res, next) => {
   }
 };
 
+export const purgeDemoData = async (req, res, next) => {
+  try {
+    const { purgeAllFakeRecords } = await import("../services/seedService.js");
+    await purgeAllFakeRecords();
+    res.json({ success: true, message: "All fake records, mock listings, claims, and demo users have been completely cleared." });
+  } catch (error) {
+    next(error);
+  }
+};
+

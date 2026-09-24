@@ -8,14 +8,14 @@ import {
 } from 'lucide-react';
 
 export default function LandingPage() {
-  const { user, quickDemoLogin } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
-    mealsRescued: 2850,
-    donationsCompleted: 142,
-    activeDonors: 34,
-    organizationsHelped: 28,
-    wastePreventedKg: 1425
+    mealsRescued: 0,
+    donationsCompleted: 0,
+    activeDonors: 0,
+    organizationsHelped: 0,
+    wastePreventedKg: 0
   });
 
   useEffect(() => {
@@ -25,11 +25,11 @@ export default function LandingPage() {
         if (res.data.success) {
           const d = res.data.data;
           setStats({
-            mealsRescued: d.totalMealsRescued || 2850,
-            donationsCompleted: d.completedClaims || 142,
-            activeDonors: d.totalDonors || 34,
-            organizationsHelped: d.totalRecipients || 28,
-            wastePreventedKg: d.wastePreventedKg || 1425
+            mealsRescued: d.totalMealsRescued || 0,
+            donationsCompleted: d.completedClaims || 0,
+            activeDonors: d.totalDonors || 0,
+            organizationsHelped: d.totalRecipients || 0,
+            wastePreventedKg: d.wastePreventedKg || 0
           });
         }
       } catch (e) {
@@ -38,16 +38,6 @@ export default function LandingPage() {
     };
     loadStats();
   }, []);
-
-  const handleDemo = async (role) => {
-    try {
-      await quickDemoLogin(role);
-      if (role === 'donor') navigate('/donor/dashboard');
-      else if (role === 'recipient') navigate('/recipient/dashboard');
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const aiModules = [
     {
@@ -140,24 +130,6 @@ export default function LandingPage() {
                 Donate Food (For Restaurants)
               </Link>
             </div>
-
-            {/* Quick Demo Credentials Bar */}
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
-              <span className="text-slate-400 font-medium">Instant One-Click Demo:</span>
-              <button
-                onClick={() => handleDemo('donor')}
-                className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold hover:border-emerald-500 hover:text-emerald-700 shadow-sm"
-              >
-                🌱 Test as Donor
-              </button>
-              <button
-                onClick={() => handleDemo('recipient')}
-                className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold hover:border-emerald-500 hover:text-emerald-700 shadow-sm"
-              >
-                🏢 Test as Recipient NGO
-              </button>
-            </div>
-
           </div>
 
           {/* Key Platform Stats Counter */}

@@ -33,18 +33,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemo = async (role) => {
-    setError('');
-    setSuccessMsg('');
-    try {
-      const res = await quickDemoLogin(role);
-      if (role === 'donor') navigate('/donor/dashboard');
-      else if (role === 'recipient') navigate('/recipient/dashboard');
-    } catch (err) {
-      setError(err.message || 'Demo login failed');
-    }
-  };
-
   return (
     <div
       className="relative min-h-[90vh] flex items-center justify-center px-4 py-12 bg-cover bg-center bg-no-repeat"
@@ -117,28 +105,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo One-Click Login Box */}
-        <div className="pt-4 border-t border-slate-100 space-y-2">
-          <p className="text-[11px] font-bold text-slate-400 text-center uppercase tracking-wider flex items-center justify-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> One-Click Demo Credentials
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleDemo('donor')}
-              className="p-2 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
-            >
-              🌱 Donor (Restaurant)
-            </button>
-            <button
-              onClick={() => handleDemo('recipient')}
-              className="p-2 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
-            >
-              🏢 Recipient (NGO)
-            </button>
-          </div>
-        </div>
-
-        <div className="pt-2 text-center border-t border-slate-100">
+        <div className="pt-4 text-center border-t border-slate-100">
           <Link
             to="/admin/login"
             className="text-[11px] font-semibold text-slate-500 hover:text-emerald-700 inline-flex items-center gap-1.5 transition-colors"

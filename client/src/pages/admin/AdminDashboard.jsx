@@ -33,16 +33,16 @@ export default function AdminDashboard() {
   if (loading) return <div className="p-8 text-center text-xs text-slate-500">Loading Central Admin Operations Portal...</div>;
 
   const d = analytics || {
-    totalUsers: 48,
-    totalDonors: 28,
-    totalRecipients: 20,
-    totalListings: 142,
-    activeListings: 12,
-    totalClaims: 130,
-    completedClaims: 118,
-    totalMealsRescued: 2850,
-    wastePreventedKg: 1425,
-    co2OffsetKg: 3560
+    totalUsers: 0,
+    totalDonors: 0,
+    totalRecipients: 0,
+    totalListings: 0,
+    activeListings: 0,
+    totalClaims: 0,
+    completedClaims: 0,
+    totalMealsRescued: 0,
+    wastePreventedKg: 0,
+    co2OffsetKg: 0
   };
 
   return (

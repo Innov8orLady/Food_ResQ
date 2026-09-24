@@ -27,9 +27,9 @@ export default function AdminAnalyticsPage() {
   if (loading) return <div className="p-8 text-center text-xs text-slate-500">Loading system analytics...</div>;
 
   const d = data || {
-    totalMealsRescued: 2850,
-    wastePreventedKg: 1425,
-    co2OffsetKg: 3560,
+    totalMealsRescued: 0,
+    wastePreventedKg: 0,
+    co2OffsetKg: 0,
     categoryBreakdown: [],
     riskDistribution: []
   };
