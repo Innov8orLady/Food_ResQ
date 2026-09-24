@@ -18,7 +18,6 @@ export default function Navbar() {
       await quickDemoLogin(role);
       if (role === 'donor') navigate('/donor/dashboard');
       else if (role === 'recipient') navigate('/recipient/dashboard');
-      else if (role === 'admin') navigate('/admin/dashboard');
     } catch (err) {
       console.error(err);
     }
@@ -65,7 +64,6 @@ export default function Navbar() {
                 </span>
                 <button onClick={() => handleDemo('donor')} className="px-2.5 py-1 rounded-lg font-semibold text-slate-700 hover:bg-emerald-600 hover:text-white transition-all">Donor</button>
                 <button onClick={() => handleDemo('recipient')} className="px-2.5 py-1 rounded-lg font-semibold text-slate-700 hover:bg-emerald-600 hover:text-white transition-all">NGO</button>
-                <button onClick={() => handleDemo('admin')} className="px-2.5 py-1 rounded-lg font-semibold text-slate-700 hover:bg-emerald-600 hover:text-white transition-all">Admin</button>
               </div>
             )}
 

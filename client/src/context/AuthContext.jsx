@@ -52,6 +52,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const quickDemoLogin = async (role) => {
+    if (role === 'admin') {
+      throw new Error('Quick demo bypass is disabled for Administrator accounts. Please log in with credentials.');
+    }
     const res = await api.post('/auth/demo-login', { role });
     if (res.data.success) {
       localStorage.setItem('foodresq_token', res.data.token);
@@ -60,6 +63,17 @@ export const AuthProvider = ({ children }) => {
       return res.data;
     }
     throw new Error(res.data.message || 'Demo login failed');
+  };
+
+  const adminLogin = async (email, password, securityCode) => {
+    const res = await api.post('/auth/admin-login', { email, password, securityCode });
+    if (res.data.success) {
+      localStorage.setItem('foodresq_token', res.data.token);
+      localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
+      setUser(res.data.user);
+      return res.data;
+    }
+    throw new Error(res.data.message || 'Administrator authentication failed');
   };
 
   const updateUser = (updated) => {
@@ -74,7 +88,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, quickDemoLogin, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, quickDemoLogin, adminLogin, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

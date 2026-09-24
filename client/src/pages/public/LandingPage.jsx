@@ -44,7 +44,6 @@ export default function LandingPage() {
       await quickDemoLogin(role);
       if (role === 'donor') navigate('/donor/dashboard');
       else if (role === 'recipient') navigate('/recipient/dashboard');
-      else if (role === 'admin') navigate('/admin/dashboard');
     } catch (err) {
       console.error(err);
     }
@@ -156,12 +155,6 @@ export default function LandingPage() {
                 className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold hover:border-emerald-500 hover:text-emerald-700 shadow-sm"
               >
                 🏢 Test as Recipient NGO
-              </button>
-              <button
-                onClick={() => handleDemo('admin')}
-                className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold hover:border-emerald-500 hover:text-emerald-700 shadow-sm"
-              >
-                ⚡ Test as Admin
               </button>
             </div>
 

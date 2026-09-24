@@ -16,6 +16,15 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Please provide all required registration fields." });
     }
 
+    const normalizedRole = role.toLowerCase();
+    const allowedRegistrationRoles = ["donor", "recipient"];
+    if (!allowedRegistrationRoles.includes(normalizedRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Administrator accounts cannot be self-registered. Only 'donor' and 'recipient' registrations are permitted."
+      });
+    }
+
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
       return res.status(400).json({ success: false, message: "An account with this email address already exists." });
@@ -103,9 +112,15 @@ export const getMe = async (req, res, next) => {
 export const quickDemoLogin = async (req, res, next) => {
   try {
     const { role } = req.body;
+    if (role === "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Security Policy: Quick demo bypass is disabled for Platform Administrator accounts. Please log in via the Secure Admin Gateway."
+      });
+    }
+
     let targetEmail = "donor@foodresq.org";
     if (role === "recipient") targetEmail = "recipient@foodresq.org";
-    if (role === "admin") targetEmail = "admin@foodresq.org";
 
     const user = await User.findOne({ email: targetEmail });
     if (!user) {
@@ -118,6 +133,52 @@ export const quickDemoLogin = async (req, res, next) => {
     res.json({
       success: true,
       message: `Logged in as Demo ${user.role.toUpperCase()}`,
+      token,
+      user: safeUser
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const adminLogin = async (req, res, next) => {
+  try {
+    const { email, password, securityCode } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: "Please enter your administrator email and password." });
+    }
+
+    // Optional admin security code / passkey verification (if configured in environment)
+    const configuredCode = process.env.ADMIN_SECURITY_CODE;
+    if (configuredCode && securityCode !== configuredCode) {
+      return res.status(401).json({
+        success: false,
+        message: "Access Denied: Invalid Administrator Security Clearance Code."
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || user.role !== "admin") {
+      return res.status(401).json({
+        success: false,
+        message: "Access Denied: Invalid credentials or account lacks administrator privileges."
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Access Denied: Invalid administrator password."
+      });
+    }
+
+    const token = generateToken(user._id, user.role);
+    const { password: _, ...safeUser } = user;
+
+    res.json({
+      success: true,
+      message: "Admin authentication successful. Welcome to FoodResQ Command Center.",
       token,
       user: safeUser
     });

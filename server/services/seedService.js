@@ -11,7 +11,18 @@ export async function seedDatabase() {
   try {
     const existingUsers = await User.countDocuments();
     if (existingUsers > 0) {
-      console.log("[Seed] Database already contains data. Skipping initial seeding.");
+      if (process.env.ADMIN_PASSWORD) {
+        const adminUser = await User.findOne({ email: "admin@foodresq.org" });
+        if (adminUser) {
+          const isMatch = await bcrypt.compare(process.env.ADMIN_PASSWORD, adminUser.password);
+          if (!isMatch) {
+            const salt = await bcrypt.genSalt(10);
+            const newHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, salt);
+            await User.findByIdAndUpdate(adminUser._id || adminUser.id, { password: newHash });
+            console.log("[Seed] Admin password updated from ADMIN_PASSWORD environment variable.");
+          }
+        }
+      }
       return;
     }
 
@@ -20,7 +31,7 @@ export async function seedDatabase() {
     const salt = await bcrypt.genSalt(10);
     const donorPass = await bcrypt.hash("password123", salt);
     const recipientPass = await bcrypt.hash("password123", salt);
-    const adminPass = await bcrypt.hash("admin123", salt);
+    const adminPass = await bcrypt.hash(process.env.ADMIN_PASSWORD || "admin123", salt);
 
     // 1. Create Core Users
     const donorUser = await User.create({
@@ -159,7 +170,7 @@ export async function seedDatabase() {
       foodName: "Dal Makhani, Rice & Butter Roti Packets",
       category: "Cooked Meals",
       preparationTime: new Date(now.getTime() - 2 * 3600 * 1000),
-      storageCondition: "Hot Holding (>60°C)",
+      storageCondition: "Hot Holding (>60ï¿½C)",
       packagingType: "Sealed Food Containers",
       dietaryType: "Vegetarian"
     });
@@ -178,7 +189,7 @@ export async function seedDatabase() {
       availableFrom: new Date(now.getTime() - 1 * 3600 * 1000),
       availableUntil: new Date(now.getTime() + 4 * 3600 * 1000),
       location: donorUser.location,
-      storageCondition: "Hot Holding (>60°C)",
+      storageCondition: "Hot Holding (>60ï¿½C)",
       packagingType: "Sealed Food Containers",
       dietaryType: "Vegetarian",
       description: "Surplus freshly prepared banquet dinner meal boxes. Each packet contains Dal Makhani, Jeera Rice, 2 Roti, and Salad. Sealed hot.",

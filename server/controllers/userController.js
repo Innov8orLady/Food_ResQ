@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { User } from "../models/User.js";
 import { Notification } from "../models/Notification.js";
 
@@ -66,3 +67,35 @@ export const markNotificationRead = async (req, res, next) => {
     next(error);
   }
 };
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Current and new passwords are required." });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "New password must be at least 6 characters long." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Incorrect current password." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+    res.json({ success: true, message: "Password updated successfully." });
+  } catch (error) {
+    next(error);
+  }
+};
+

@@ -40,7 +40,8 @@ export default function DashboardLayout() {
     { to: '/admin/listings', label: 'Listing Moderation', icon: ListOrdered },
     { to: '/admin/claims', label: 'Claims Audit', icon: CalendarCheck },
     { to: '/admin/reports', label: 'Impact Reports', icon: ShieldCheck },
-    { to: '/admin/analytics', label: 'System Analytics', icon: BarChart3 }
+    { to: '/admin/analytics', label: 'System Analytics', icon: BarChart3 },
+    { to: '/admin/profile', label: 'Security & Profile', icon: User }
   ];
 
   let navLinks = donorLinks;

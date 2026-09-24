@@ -35,12 +35,14 @@ import ClaimHistoryPage from './pages/recipient/ClaimHistoryPage';
 import RecipientProfilePage from './pages/recipient/RecipientProfilePage';
 
 // Admin Pages
+import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import FoodListingManagementPage from './pages/admin/FoodListingManagementPage';
 import ClaimsManagementPage from './pages/admin/ClaimsManagementPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
+import AdminProfilePage from './pages/admin/AdminProfilePage';
 
 export default function App() {
   return (
@@ -54,6 +56,9 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/contact" element={<ContactPage />} />
       </Route>
+
+      {/* Dedicated Secure Admin Login Gateway */}
+      <Route path="/admin/login" element={<AdminLoginPage />} />
 
       {/* Donor Portal Protected Routes */}
       <Route element={<RouteGuard allowedRoles={['donor', 'admin']} />}>
@@ -92,6 +97,7 @@ export default function App() {
           <Route path="/admin/claims" element={<ClaimsManagementPage />} />
           <Route path="/admin/reports" element={<ReportsPage />} />
           <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+          <Route path="/admin/profile" element={<AdminProfilePage />} />
         </Route>
       </Route>
 

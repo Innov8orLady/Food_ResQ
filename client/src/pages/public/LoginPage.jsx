@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { UtensilsCrossed, Lock, Mail, Sparkles, AlertCircle } from 'lucide-react';
+import { UtensilsCrossed, Lock, Mail, Sparkles, AlertCircle, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -34,7 +34,6 @@ export default function LoginPage() {
       const res = await quickDemoLogin(role);
       if (role === 'donor') navigate('/donor/dashboard');
       else if (role === 'recipient') navigate('/recipient/dashboard');
-      else if (role === 'admin') navigate('/admin/dashboard');
     } catch (err) {
       setError(err.message || 'Demo login failed');
     }
@@ -104,26 +103,30 @@ export default function LoginPage() {
           <p className="text-[11px] font-bold text-slate-400 text-center uppercase tracking-wider flex items-center justify-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> One-Click Demo Credentials
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => handleDemo('donor')}
               className="p-2 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
             >
-              🌱 Donor
+              🌱 Donor (Restaurant)
             </button>
             <button
               onClick={() => handleDemo('recipient')}
               className="p-2 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
             >
-              🏢 NGO
-            </button>
-            <button
-              onClick={() => handleDemo('admin')}
-              className="p-2 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
-            >
-              ⚡ Admin
+              🏢 Recipient (NGO)
             </button>
           </div>
+        </div>
+
+        <div className="pt-2 text-center border-t border-slate-100">
+          <Link
+            to="/admin/login"
+            className="text-[11px] font-semibold text-slate-500 hover:text-emerald-700 inline-flex items-center gap-1.5 transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            Platform Administrator? Sign in via Secure Admin Portal &rarr;
+          </Link>
         </div>
 
         <p className="text-center text-xs text-slate-500">
