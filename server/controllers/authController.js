@@ -16,7 +16,14 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Please provide all required registration fields." });
     }
 
-    const normalizedRole = role.toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      return res.status(400).json({ success: false, message: "Email and password cannot be blank." });
+    }
+
+    const normalizedRole = role.toLowerCase().trim();
     const allowedRegistrationRoles = ["donor", "recipient"];
     if (!allowedRegistrationRoles.includes(normalizedRole)) {
       return res.status(403).json({
@@ -25,25 +32,25 @@ export const register = async (req, res, next) => {
       });
     }
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
+    const existing = await User.findOne({ email: cleanEmail });
     if (existing) {
-      return res.status(400).json({ success: false, message: "An account with this email address already exists." });
+      return res.status(400).json({ success: false, message: "An account with this email address already exists. Please sign in." });
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(cleanPassword, salt);
 
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+      name: name.trim(),
+      email: cleanEmail,
       password: hashedPassword,
-      role: role.toLowerCase(),
-      phone: phone || "",
-      organizationName: organizationName || name,
-      organizationType: organizationType || (role === "donor" ? "Restaurant" : "NGO"),
+      role: normalizedRole,
+      phone: phone ? phone.trim() : "",
+      organizationName: organizationName ? organizationName.trim() : name.trim(),
+      organizationType: organizationType || (normalizedRole === "donor" ? "Restaurant" : "NGO"),
       location: {
-        address: address || "",
-        city: city || "Delhi NCR",
+        address: address ? address.trim() : "",
+        city: city ? city.trim() : "Delhi NCR",
         coordinates: coordinates || [28.6139, 77.2090]
       },
       capacity: capacity ? Number(capacity) : 50,
@@ -72,12 +79,15 @@ export const login = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Please enter your email and password." });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(cleanPassword, user.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
@@ -148,6 +158,9 @@ export const adminLogin = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Please enter your administrator email and password." });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
     // Optional admin security code / passkey verification (if configured in environment)
     const configuredCode = process.env.ADMIN_SECURITY_CODE;
     if (configuredCode && securityCode !== configuredCode) {
@@ -157,7 +170,7 @@ export const adminLogin = async (req, res, next) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: cleanEmail });
     if (!user || user.role !== "admin") {
       return res.status(401).json({
         success: false,
@@ -165,7 +178,7 @@ export const adminLogin = async (req, res, next) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(cleanPassword, user.password);
     if (!isMatch) {
       return res.status(401).json({
         success: false,

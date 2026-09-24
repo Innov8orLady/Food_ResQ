@@ -31,12 +31,17 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
-      
+    <div
+      className="min-h-screen flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/bg-auth.jpg')" }}
+    >
+      {/* Dark overlay for security console */}
+      <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-[2px]"></div>
+
       {/* Background ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6 relative z-10 text-white">
+      <div className="w-full max-w-md bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6 relative z-10 text-white">
         
         {/* Back link */}
         <Link

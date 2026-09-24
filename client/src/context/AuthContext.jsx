@@ -30,50 +30,76 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
-    if (res.data.success) {
-      localStorage.setItem('foodresq_token', res.data.token);
-      localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
-      setUser(res.data.user);
-      return res.data;
+    try {
+      const cleanEmail = (email || '').trim().toLowerCase();
+      const cleanPassword = (password || '').trim();
+      const res = await api.post('/auth/login', { email: cleanEmail, password: cleanPassword });
+      if (res.data.success) {
+        localStorage.setItem('foodresq_token', res.data.token);
+        localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
+        setUser(res.data.user);
+        return res.data;
+      }
+      throw new Error(res.data.message || 'Login failed');
+    } catch (err) {
+      throw new Error(err.response?.data?.message || err.message || 'Invalid email or password');
     }
-    throw new Error(res.data.message || 'Login failed');
   };
 
   const register = async (formData) => {
-    const res = await api.post('/auth/register', formData);
-    if (res.data.success) {
-      localStorage.setItem('foodresq_token', res.data.token);
-      localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
-      setUser(res.data.user);
-      return res.data;
+    try {
+      const sanitized = {
+        ...formData,
+        email: (formData.email || '').trim().toLowerCase(),
+        password: (formData.password || '').trim(),
+        name: (formData.name || '').trim()
+      };
+      const res = await api.post('/auth/register', sanitized);
+      if (res.data.success) {
+        localStorage.setItem('foodresq_token', res.data.token);
+        localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
+        setUser(res.data.user);
+        return res.data;
+      }
+      throw new Error(res.data.message || 'Registration failed');
+    } catch (err) {
+      throw new Error(err.response?.data?.message || err.message || 'Registration failed');
     }
-    throw new Error(res.data.message || 'Registration failed');
   };
 
   const quickDemoLogin = async (role) => {
     if (role === 'admin') {
       throw new Error('Quick demo bypass is disabled for Administrator accounts. Please log in with credentials.');
     }
-    const res = await api.post('/auth/demo-login', { role });
-    if (res.data.success) {
-      localStorage.setItem('foodresq_token', res.data.token);
-      localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
-      setUser(res.data.user);
-      return res.data;
+    try {
+      const res = await api.post('/auth/demo-login', { role });
+      if (res.data.success) {
+        localStorage.setItem('foodresq_token', res.data.token);
+        localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
+        setUser(res.data.user);
+        return res.data;
+      }
+      throw new Error(res.data.message || 'Demo login failed');
+    } catch (err) {
+      throw new Error(err.response?.data?.message || err.message || 'Demo login failed');
     }
-    throw new Error(res.data.message || 'Demo login failed');
   };
 
   const adminLogin = async (email, password, securityCode) => {
-    const res = await api.post('/auth/admin-login', { email, password, securityCode });
-    if (res.data.success) {
-      localStorage.setItem('foodresq_token', res.data.token);
-      localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
-      setUser(res.data.user);
-      return res.data;
+    try {
+      const cleanEmail = (email || '').trim().toLowerCase();
+      const cleanPassword = (password || '').trim();
+      const res = await api.post('/auth/admin-login', { email: cleanEmail, password: cleanPassword, securityCode });
+      if (res.data.success) {
+        localStorage.setItem('foodresq_token', res.data.token);
+        localStorage.setItem('foodresq_user', JSON.stringify(res.data.user));
+        setUser(res.data.user);
+        return res.data;
+      }
+      throw new Error(res.data.message || 'Administrator authentication failed');
+    } catch (err) {
+      throw new Error(err.response?.data?.message || err.message || 'Administrator authentication failed');
     }
-    throw new Error(res.data.message || 'Administrator authentication failed');
   };
 
   const updateUser = (updated) => {

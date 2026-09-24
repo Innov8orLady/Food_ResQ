@@ -34,7 +34,17 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await register(formData);
+      const sanitizedData = {
+        ...formData,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password.trim(),
+        organizationName: (formData.organizationName || formData.name).trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        city: formData.city.trim()
+      };
+      const res = await register(sanitizedData);
       if (res.user.role === 'donor') navigate('/donor/dashboard');
       else if (res.user.role === 'recipient') navigate('/recipient/dashboard');
       else navigate('/');
@@ -46,8 +56,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-xl bg-white p-8 rounded-3xl border border-slate-200/90 shadow-xl space-y-6">
+    <div
+      className="relative min-h-[90vh] flex items-center justify-center px-4 py-12 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/bg-auth.jpg')" }}
+    >
+      {/* Dark gradient backdrop overlay */}
+      <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px]"></div>
+
+      <div className="relative z-10 w-full max-w-xl bg-white/95 backdrop-blur-md p-8 rounded-3xl border border-white/40 shadow-2xl space-y-6">
         
         <div className="text-center space-y-1">
           <h2 className="text-2xl font-black text-slate-900">Create FoodResQ Account</h2>

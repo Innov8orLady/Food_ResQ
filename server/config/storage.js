@@ -5,7 +5,10 @@ import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_FILE = path.join(__dirname, "../data/store.json");
+const BUNDLED_DATA_FILE = path.join(__dirname, "../data/store.json");
+const DATA_FILE = process.env.VERCEL
+  ? path.join("/tmp", "foodresq_store.json")
+  : BUNDLED_DATA_FILE;
 
 // In-memory data tables
 let store = {
@@ -22,6 +25,9 @@ try {
   if (fs.existsSync(DATA_FILE)) {
     const raw = fs.readFileSync(DATA_FILE, "utf-8");
     store = { ...store, ...JSON.parse(raw) };
+  } else if (fs.existsSync(BUNDLED_DATA_FILE)) {
+    const raw = fs.readFileSync(BUNDLED_DATA_FILE, "utf-8");
+    store = { ...store, ...JSON.parse(raw) };
   }
 } catch (e) {
   console.warn("[Storage] Initializing fresh local store:", e.message);
@@ -33,7 +39,7 @@ const persistStore = () => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), "utf-8");
   } catch (err) {
-    console.error("[Storage] Failed to persist store:", err.message);
+    console.warn("[Storage] Fallback memory store warning:", err.message);
   }
 };
 

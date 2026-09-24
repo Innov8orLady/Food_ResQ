@@ -272,26 +272,34 @@ export default function LandingPage() {
 
       {/* Final Call to Action */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-8 sm:p-12 text-white text-center relative overflow-hidden shadow-xl">
-          <h2 className="text-3xl sm:text-4xl font-black">
-            Ready to turn excess food into real community impact?
-          </h2>
-          <p className="text-sm sm:text-base text-emerald-100 max-w-2xl mx-auto mt-3">
-            Join hundreds of food businesses and non-profit shelters already using FoodResQ to eliminate food waste and fight hunger.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
-            <Link
-              to="/register"
-              className="px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-emerald-800 hover:bg-slate-100 shadow-lg transition-all hover:scale-105"
-            >
-              Get Started for Free
-            </Link>
-            <Link
-              to="/contact"
-              className="px-6 py-3.5 rounded-xl font-bold text-sm bg-emerald-800/60 text-white border border-emerald-400/40 hover:bg-emerald-800 transition-all"
-            >
-              Contact Operations Team
-            </Link>
+        <div
+          className="rounded-3xl p-8 sm:p-12 text-white text-center relative overflow-hidden shadow-xl bg-cover bg-center"
+          style={{ backgroundImage: "url('/bg-auth.jpg')" }}
+        >
+          {/* Emerald/Slate Deep Tone Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/90 via-emerald-900/85 to-teal-950/90 backdrop-blur-[1px]"></div>
+
+          <div className="relative z-10">
+            <h2 className="text-3xl sm:text-4xl font-black">
+              Ready to turn excess food into real community impact?
+            </h2>
+            <p className="text-sm sm:text-base text-emerald-100 max-w-2xl mx-auto mt-3">
+              Join hundreds of food businesses and non-profit shelters already using FoodResQ to eliminate food waste and fight hunger.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
+              <Link
+                to="/register"
+                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-emerald-800 hover:bg-slate-100 shadow-lg transition-all hover:scale-105"
+              >
+                Get Started for Free
+              </Link>
+              <Link
+                to="/contact"
+                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-emerald-800/60 text-white border border-emerald-400/40 hover:bg-emerald-800 transition-all"
+              >
+                Contact Operations Team
+              </Link>
+            </div>
           </div>
         </div>
       </section>
