@@ -34,6 +34,25 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Static uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+let isInitialized = false;
+async function initializeApp() {
+  await connectDB();
+  await seedDatabase();
+  isInitialized = true;
+}
+
+// Ensure database and seed store are ready on serverless calls BEFORE any route executes
+app.use(async (req, res, next) => {
+  if (!isInitialized) {
+    try {
+      await initializeApp();
+    } catch (err) {
+      console.warn("DB init warning:", err.message);
+    }
+  }
+  next();
+});
+
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/food", foodRoutes);
@@ -65,27 +84,6 @@ app.get("/api/health", (req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-
-let isInitialized = false;
-async function initializeApp() {
-  if (!isInitialized) {
-    await connectDB();
-    await seedDatabase();
-    isInitialized = true;
-  }
-}
-
-// Ensure database and seed store are ready on serverless calls
-app.use(async (req, res, next) => {
-  if (!isInitialized) {
-    try {
-      await initializeApp();
-    } catch (err) {
-      console.warn("DB init warning:", err.message);
-    }
-  }
-  next();
-});
 
 // Start local listener only if not running inside Vercel serverless environment
 if (!process.env.VERCEL) {
