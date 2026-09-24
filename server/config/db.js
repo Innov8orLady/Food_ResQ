@@ -11,6 +11,7 @@ export const connectDB = async () => {
   try {
     mongoose.set("strictQuery", false);
     await mongoose.connect(uri, {
+      dbName: "foodresq",
       serverSelectionTimeoutMS: 10000,
     });
     isMongoConnected = true;
