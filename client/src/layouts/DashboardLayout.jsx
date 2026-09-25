@@ -54,8 +54,8 @@ export default function DashboardLayout() {
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
         
         <aside className="w-full md:w-60 shrink-0">
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm sticky top-20">
-            <div className="px-3 py-2 mb-3 bg-slate-50 rounded-xl border border-slate-100">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-3 md:p-4 shadow-sm md:sticky md:top-20">
+            <div className="hidden md:block px-3 py-2 mb-3 bg-slate-50 rounded-xl border border-slate-100">
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
                 {role.toUpperCase()} PORTAL
               </span>
@@ -63,7 +63,7 @@ export default function DashboardLayout() {
               <p className="text-[11px] text-slate-400 truncate">{user.location?.city || "Delhi NCR"}</p>
             </div>
 
-            <nav className="space-y-1">
+            <nav className="flex md:flex-col gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
               {navLinks.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.to;
@@ -71,7 +71,7 @@ export default function DashboardLayout() {
                   <Link
                     key={item.to}
                     to={item.to}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`shrink-0 flex items-center gap-2 md:gap-3 px-3.5 py-2 md:py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                       isActive
                         ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
                         : item.highlight
@@ -79,7 +79,7 @@ export default function DashboardLayout() {
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-4 h-4 shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 );
