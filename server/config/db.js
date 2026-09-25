@@ -28,5 +28,7 @@ export const getDbStatus = () => {
   return {
     isMongoConnected: connected,
     type: connected ? "MongoDB Atlas" : "LocalDocumentStore",
+    databaseName: connected ? mongoose.connection.name : null,
+    host: connected ? mongoose.connection.host : null,
   };
 };
