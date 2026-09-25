@@ -49,7 +49,7 @@ export default function DashboardLayout() {
   if (role === 'admin') navLinks = adminLinks;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-slate-50/50">
       <Navbar />
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
         

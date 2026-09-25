@@ -43,10 +43,15 @@ import ClaimsManagementPage from './pages/admin/ClaimsManagementPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
 import AdminProfilePage from './pages/admin/AdminProfilePage';
+import ScrollToTop from './components/ScrollToTop';
+import SiteBackground from './components/SiteBackground';
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <SiteBackground />
+      <Routes>
       {/* Public Pages */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
@@ -104,5 +109,6 @@ export default function App() {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  );
+  </>
+);
 }
