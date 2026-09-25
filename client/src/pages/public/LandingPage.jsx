@@ -94,75 +94,61 @@ export default function LandingPage() {
   return (
     <div className="space-y-20 pb-16">
       
-      {/* Hero Section with High-Visibility Background Photo */}
-      <section className="relative pt-12 pb-20 overflow-hidden">
-        {/* Real Visible Background Photo */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <img
-            src="/background.jpeg"
-            alt="Children enjoying nutritious food"
-            className="w-full h-full object-cover object-center filter brightness-100 saturate-115 contrast-105"
-          />
-          {/* Sheer daylight tint for maximum photo clarity and visibility */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-emerald-50/20 to-slate-100/40 backdrop-blur-[0.5px]" />
+      {/* Hero Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-12">
+        <div className="text-center max-w-3xl mx-auto space-y-6">
+          
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 shadow-xs">
+            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <span>AI-POWERED FOOD RESCUE & WASTE INTELLIGENCE</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            Predict waste. Rescue surplus. <br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">
+              Feed communities.
+            </span>
+          </h1>
+
+          <p className="text-base sm:text-lg text-slate-700 font-medium leading-relaxed max-w-2xl mx-auto">
+            FoodResQ connects restaurants, hotels, cafeterias, and event organizers having surplus food with nearby NGOs, shelters, and community kitchens using five specialized AI models.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <Link
+              to="/register?role=recipient"
+              className="px-6 py-3.5 rounded-xl font-bold text-sm bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all hover:scale-105"
+            >
+              Find Food (For NGOs) <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/register?role=donor"
+              className="px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 shadow-sm flex items-center gap-2 transition-all hover:scale-105"
+            >
+              Donate Food (For Restaurants)
+            </Link>
+          </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center max-w-3xl mx-auto space-y-6 bg-white/88 backdrop-blur-md p-6 sm:p-10 rounded-3xl border border-white/80 shadow-2xl shadow-slate-900/10">
-            
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 text-xs font-bold text-emerald-900 shadow-sm">
-              <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span>AI-POWERED FOOD RESCUE & WASTE INTELLIGENCE</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Predict waste. Rescue surplus. <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-700 to-teal-600">
-                Feed communities.
-              </span>
-            </h1>
-
-            <p className="text-base sm:text-lg text-slate-700 font-medium leading-relaxed max-w-2xl mx-auto">
-              FoodResQ connects restaurants, hotels, cafeterias, and event organizers having surplus food with nearby NGOs, shelters, and community kitchens using five specialized AI models.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              <Link
-                to="/register?role=recipient"
-                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all hover:scale-105"
-              >
-                Find Food (For NGOs) <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/register?role=donor"
-                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 shadow-sm flex items-center gap-2 transition-all hover:scale-105"
-              >
-                Donate Food (For Restaurants)
-              </Link>
-            </div>
+        {/* Key Platform Stats Counter */}
+        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+            <p className="text-3xl font-black text-emerald-600">{stats.mealsRescued.toLocaleString()}+</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Meals Rescued</p>
           </div>
-
-          {/* Key Platform Stats Counter */}
-          <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-            <div className="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-white/60 shadow-sm text-center">
-              <p className="text-3xl font-black text-emerald-600">{stats.mealsRescued.toLocaleString()}+</p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Meals Rescued</p>
-            </div>
-            <div className="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-white/60 shadow-sm text-center">
-              <p className="text-3xl font-black text-slate-900">{stats.wastePreventedKg.toLocaleString()} kg</p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Waste Prevented</p>
-            </div>
-            <div className="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-white/60 shadow-sm text-center">
-              <p className="text-3xl font-black text-emerald-600">{stats.activeDonors}</p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Active Donors</p>
-            </div>
-            <div className="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-white/60 shadow-sm text-center">
-              <p className="text-3xl font-black text-slate-900">{stats.organizationsHelped}</p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Shelters Helped</p>
-            </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+            <p className="text-3xl font-black text-slate-900">{stats.wastePreventedKg.toLocaleString()} kg</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Waste Prevented</p>
           </div>
-
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+            <p className="text-3xl font-black text-emerald-600">{stats.activeDonors}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Active Donors</p>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+            <p className="text-3xl font-black text-slate-900">{stats.organizationsHelped}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Shelters Helped</p>
+          </div>
         </div>
       </section>
 
