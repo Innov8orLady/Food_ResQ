@@ -94,23 +94,23 @@ export default function LandingPage() {
   return (
     <div className="space-y-20 pb-16">
       
-      {/* Hero Section with Auto-Adjusted Background Photo */}
-      <section className="relative pt-16 pb-20 overflow-hidden">
+      {/* Hero Section with High-Visibility Background Photo */}
+      <section className="relative pt-12 pb-20 overflow-hidden">
         {/* Real Visible Background Photo */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <img
             src="/background.jpeg"
             alt="Children enjoying nutritious food"
-            className="w-full h-full object-cover object-center filter brightness-[0.95] saturate-110"
+            className="w-full h-full object-cover object-center filter brightness-100 saturate-115 contrast-105"
           />
-          {/* Auto-Adjusted Visibility Overlay: Soft daylight gradient that ensures full text contrast while showing the children clearly */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-emerald-50/60 to-slate-50/80 backdrop-blur-[0.5px]" />
+          {/* Sheer daylight tint for maximum photo clarity and visibility */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-emerald-50/20 to-slate-100/40 backdrop-blur-[0.5px]" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
+          <div className="text-center max-w-3xl mx-auto space-y-6 bg-white/88 backdrop-blur-md p-6 sm:p-10 rounded-3xl border border-white/80 shadow-2xl shadow-slate-900/10">
             
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-emerald-300 text-xs font-bold text-emerald-900 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 text-xs font-bold text-emerald-900 shadow-sm">
               <Sparkles className="w-4 h-4 text-emerald-600" />
               <span>AI-POWERED FOOD RESCUE & WASTE INTELLIGENCE</span>
             </div>
@@ -136,7 +136,7 @@ export default function LandingPage() {
               </Link>
               <Link
                 to="/register?role=donor"
-                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-white/95 text-slate-800 border border-slate-300 hover:bg-white shadow-sm flex items-center gap-2 transition-all hover:scale-105"
+                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 shadow-sm flex items-center gap-2 transition-all hover:scale-105"
               >
                 Donate Food (For Restaurants)
               </Link>

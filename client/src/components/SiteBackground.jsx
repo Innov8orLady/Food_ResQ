@@ -16,15 +16,15 @@ export default function SiteBackground() {
       <img
         src="/background.jpeg"
         alt=""
-        className="w-full h-full object-cover object-center filter saturate-110 contrast-105 brightness-[0.96]"
+        className="w-full h-full object-cover object-center filter saturate-115 contrast-105 brightness-100"
         style={{
-          opacity: 0.35,
+          opacity: 0.55,
         }}
       />
 
       {/* Auto-Adjusted Daylight Ambient Gradient Overlay */}
       <div 
-        className="absolute inset-0 bg-gradient-to-b from-white/70 via-slate-50/60 to-slate-100/75" 
+        className="absolute inset-0 bg-gradient-to-b from-white/45 via-slate-50/35 to-slate-100/45" 
       />
 
       {/* Subtle Radial Vignette to keep content area crisp */}
