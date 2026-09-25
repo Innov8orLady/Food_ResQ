@@ -16,20 +16,15 @@ export default function SiteBackground() {
       <img
         src="/background.jpeg"
         alt=""
-        className="w-full h-full object-cover object-center filter saturate-115 contrast-105 brightness-100"
+        className="w-full h-full object-cover object-center filter saturate-120 contrast-105 brightness-100"
         style={{
-          opacity: 0.55,
+          opacity: 0.85,
         }}
       />
 
-      {/* Auto-Adjusted Daylight Ambient Gradient Overlay */}
+      {/* Sheer daylight overlay for maximum transparency and clarity */}
       <div 
-        className="absolute inset-0 bg-gradient-to-b from-white/45 via-slate-50/35 to-slate-100/45" 
-      />
-
-      {/* Subtle Radial Vignette to keep content area crisp */}
-      <div 
-        className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(241,245,249,0.5)_100%)]" 
+        className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-white/20" 
       />
     </div>
   );
