@@ -98,19 +98,19 @@ export default function LandingPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-12">
         <div className="text-center max-w-3xl mx-auto space-y-6">
           
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 shadow-xs">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-emerald-300 text-xs font-bold text-emerald-900 shadow-xs">
             <Sparkles className="w-4 h-4 text-emerald-600" />
             <span>AI-POWERED FOOD RESCUE & WASTE INTELLIGENCE</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight drop-shadow-[0_2px_14px_rgba(255,255,255,0.95)]">
             Predict waste. Rescue surplus. <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">
               Feed communities.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-700 font-medium leading-relaxed max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-slate-800 font-semibold leading-relaxed max-w-2xl mx-auto drop-shadow-[0_1px_8px_rgba(255,255,255,0.9)]">
             FoodResQ connects restaurants, hotels, cafeterias, and event organizers having surplus food with nearby NGOs, shelters, and community kitchens using five specialized AI models.
           </p>
 
@@ -124,7 +124,7 @@ export default function LandingPage() {
             </Link>
             <Link
               to="/register?role=donor"
-              className="px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 shadow-sm flex items-center gap-2 transition-all hover:scale-105"
+              className="px-6 py-3.5 rounded-xl font-bold text-sm bg-white/95 text-slate-900 border border-slate-300 hover:bg-white shadow-sm flex items-center gap-2 transition-all hover:scale-105"
             >
               Donate Food (For Restaurants)
             </Link>
@@ -133,19 +133,19 @@ export default function LandingPage() {
 
         {/* Key Platform Stats Counter */}
         <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+          <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-slate-200/90 shadow-md text-center">
             <p className="text-3xl font-black text-emerald-600">{stats.mealsRescued.toLocaleString()}+</p>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Meals Rescued</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+          <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-slate-200/90 shadow-md text-center">
             <p className="text-3xl font-black text-slate-900">{stats.wastePreventedKg.toLocaleString()} kg</p>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Waste Prevented</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+          <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-slate-200/90 shadow-md text-center">
             <p className="text-3xl font-black text-emerald-600">{stats.activeDonors}</p>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Active Donors</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm text-center">
+          <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-slate-200/90 shadow-md text-center">
             <p className="text-3xl font-black text-slate-900">{stats.organizationsHelped}</p>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Shelters Helped</p>
           </div>
@@ -155,13 +155,13 @@ export default function LandingPage() {
       {/* 5 AI Modules Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+          <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-white/90 backdrop-blur-md px-3.5 py-1 rounded-full border border-emerald-200 shadow-xs">
             Intelligent Core
           </span>
-          <h2 className="text-3xl font-extrabold text-slate-900 mt-3">
+          <h2 className="text-3xl font-extrabold text-slate-900 mt-3 drop-shadow-[0_1px_8px_rgba(255,255,255,0.9)]">
             Powered by Five Specialized AI Modules
           </h2>
-          <p className="text-sm text-slate-600 mt-2">
+          <p className="text-sm text-slate-800 font-medium mt-2 drop-shadow-[0_1px_8px_rgba(255,255,255,0.85)]">
             FoodResQ goes far beyond simple food marketplaces by deploying real-time artificial intelligence to prevent spoilage, optimize pickups, and maximize nutrition transfer.
           </p>
         </div>
