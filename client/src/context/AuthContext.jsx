@@ -114,6 +114,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = async (email, newPassword) => {
+    try {
+      const cleanEmail = (email || '').trim().toLowerCase();
+      const cleanPassword = (newPassword || '').trim();
+      const res = await api.post('/auth/reset-password', { email: cleanEmail, newPassword: cleanPassword });
+      return res.data;
+    } catch (err) {
+      const serverMsg = err.response?.data?.message || err.response?.data?.error?.message;
+      throw new Error(serverMsg || err.message || 'Password reset failed');
+    }
+  };
+
   const updateUser = (updated) => {
     setUser(updated);
     localStorage.setItem('foodresq_user', JSON.stringify(updated));
@@ -126,7 +138,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, quickDemoLogin, adminLogin, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, resetPassword, quickDemoLogin, adminLogin, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

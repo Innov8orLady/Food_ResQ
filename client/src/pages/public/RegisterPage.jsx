@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { UtensilsCrossed, AlertCircle } from 'lucide-react';
+import { UtensilsCrossed, AlertCircle, ExternalLink } from 'lucide-react';
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -22,8 +22,20 @@ export default function RegisterPage() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [dbStatus, setDbStatus] = useState(null);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.database) {
+          setDbStatus(data.database);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -70,6 +82,29 @@ export default function RegisterPage() {
           <p className="text-xs text-slate-500">Join our surplus food rescue and zero-waste network</p>
         </div>
 
+        {/* Advisory if current deployment is not connected to MongoDB Atlas */}
+        {dbStatus && !dbStatus.isMongoConnected && (
+          <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-xs text-amber-900 space-y-2 shadow-sm">
+            <div className="font-bold flex items-center gap-1.5 text-amber-800">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Cloud Database Disconnected on this Domain</span>
+            </div>
+            <p className="text-[11px] text-amber-800 leading-relaxed">
+              This domain (<code>{typeof window !== 'undefined' ? window.location.hostname : 'current URL'}</code>) is missing <code>MONGODB_URI</code> in Vercel. 
+              Registrations here will not be permanently saved. Please register on your live connected app:
+            </p>
+            <div className="pt-1">
+              <a
+                href="https://food-res-q-jf52.vercel.app/register"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all"
+              >
+                <span>Register on Connected App</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        )}
+
         {typeof window !== 'undefined' && window.location.hostname.includes('-projects.vercel.app') && (
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
             <p className="font-bold flex items-center gap-1.5 text-amber-800">
@@ -84,6 +119,7 @@ export default function RegisterPage() {
             </p>
           </div>
         )}
+
 
         {error && (
           <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">

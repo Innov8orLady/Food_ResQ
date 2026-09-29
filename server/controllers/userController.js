@@ -109,3 +109,21 @@ export const purgeDemoData = async (req, res, next) => {
   }
 };
 
+export const adminResetUserPassword = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.trim().length < 6) {
+      return res.status(400).json({ success: false, message: "New password must be at least 6 characters long." });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword.trim(), salt);
+    const updated = await User.findByIdAndUpdate(id, { password: hashedPassword }, { new: true });
+    if (!updated) return res.status(404).json({ success: false, message: "User not found." });
+    res.json({ success: true, message: `Password reset successfully for ${updated.email}` });
+  } catch (error) {
+    next(error);
+  }
+};
+
+

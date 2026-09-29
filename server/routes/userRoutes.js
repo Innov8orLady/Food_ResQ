@@ -6,7 +6,8 @@ import {
   getNotifications,
   markNotificationRead,
   changePassword,
-  purgeDemoData
+  purgeDemoData,
+  adminResetUserPassword
 } from "../controllers/userController.js";
 import { protect, authorize } from "../middleware/auth.js";
 
@@ -17,7 +18,9 @@ router.post("/purge-fake-records", protect, authorize("admin"), purgeDemoData);
 router.put("/profile", protect, updateUserProfile);
 router.put("/change-password", protect, changePassword);
 router.put("/:id/verify", protect, authorize("admin"), toggleUserVerification);
+router.put("/:id/reset-password", protect, authorize("admin"), adminResetUserPassword);
 router.get("/notifications", protect, getNotifications);
 router.put("/notifications/:id/read", protect, markNotificationRead);
 
 export default router;
+

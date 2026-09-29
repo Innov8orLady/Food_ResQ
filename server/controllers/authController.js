@@ -200,3 +200,37 @@ export const adminLogin = async (req, res, next) => {
     next(error);
   }
 };
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({ success: false, message: "Email and new password are required." });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = newPassword.trim();
+
+    if (cleanPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long." });
+    }
+
+    const user = await User.findOne({ email: cleanEmail });
+    if (!user) {
+      return res.status(404).json({ success: false, message: `No account found with email '${cleanEmail}'.` });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(cleanPassword, salt);
+
+    await User.findByIdAndUpdate(user._id || user.id, { password: hashedPassword });
+
+    res.json({
+      success: true,
+      message: `Password for ${cleanEmail} updated successfully. You can now sign in.`
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
