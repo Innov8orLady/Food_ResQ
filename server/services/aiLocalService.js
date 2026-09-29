@@ -1,5 +1,6 @@
 import axios from "axios";
 import { calculateDistance, solveUrgentRoute } from "../utils/geoUtils.js";
+import { geminiRecognizeFood, geminiPredictRisk, geminiPredictDemand } from "./aiGeminiService.js";
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
@@ -31,8 +32,16 @@ const FOOD_CATALOG = [
   { keywords: ["biscuit", "cookie", "cereal", "chips", "canned", "packaged"], name: "Packaged Dry Goods", category: "Packaged Foods", dietary: "Vegetarian", baseShelfLifeHours: 240, tags: ["Packaged", "Long Shelf Life"] }
 ];
 
-export async function recognizeFood({ imageName = "", filename = "", textHint = "" }) {
-  // Try Python FastAPI microservice first
+export async function recognizeFood({ imageName = "", filename = "", textHint = "", imageBase64 = "", mimeType = "" }) {
+  // 1. Try Google Gemini Vision AI if API key is configured
+  try {
+    const geminiRes = await geminiRecognizeFood({ imageBase64, mimeType, imageName, filename, textHint });
+    if (geminiRes) return geminiRes;
+  } catch (gErr) {
+    console.warn("[Food Recognition] Gemini fallback:", gErr.message);
+  }
+
+  // 2. Try Python FastAPI microservice next
   const pythonRes = await callPythonAi("/api/ai/food-recognition", { imageName, filename, textHint });
   if (pythonRes.success) return pythonRes.data;
 
@@ -77,12 +86,28 @@ export async function predictRisk({
   packagingType = "Sealed Food Containers",
   dietaryType = "Vegetarian"
 }) {
+  // 1. Try Google Gemini AI risk prediction if API key configured
+  try {
+    const geminiRes = await geminiPredictRisk({
+      foodName,
+      category,
+      preparationTime,
+      storageCondition,
+      packagingType,
+      dietaryType
+    });
+    if (geminiRes) return geminiRes;
+  } catch (gErr) {
+    console.warn("[Risk Prediction] Gemini fallback:", gErr.message);
+  }
+
+  // 2. Try Python microservice next
   const pythonRes = await callPythonAi("/api/ai/risk-prediction", {
     foodName, category, preparationTime, storageCondition, packagingType, dietaryType
   });
   if (pythonRes.success) return pythonRes.data;
 
-  // Scientific Model based on Time-Temperature Abuse & Microbial Growth Factors
+  // 3. Local Scientific Model based on Time-Temperature Abuse & Microbial Growth Factors
   const prepDate = preparationTime ? new Date(preparationTime) : new Date();
   const elapsedHours = Math.max(0, (Date.now() - prepDate.getTime()) / (1000 * 60 * 60));
 
@@ -246,9 +271,6 @@ export async function matchRecipients({ listing, recipients, weights = null }) {
 // AI MODULE 4: DEMAND & WASTE PREDICTION
 // -------------------------------------------------------------
 export async function predictDemandAndWaste({ city = "Delhi NCR", historicalListings = [] }) {
-  const pythonRes = await callPythonAi("/api/ai/demand-prediction", { city });
-  if (pythonRes.success) return pythonRes.data;
-
   // Time-Series & Day-of-Week Trend Modeling
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const today = new Date();
@@ -285,6 +307,24 @@ export async function predictDemandAndWaste({ city = "Delhi NCR", historicalList
       riskIndex: Math.round(config.factor * 50)
     });
   }
+
+  // 1. Try Google Gemini AI demand prediction if API key configured
+  try {
+    const geminiRes = await geminiPredictDemand({ city, historicalListings });
+    if (geminiRes) {
+      return {
+        ...geminiRes,
+        targetDay: tomorrowDayName,
+        weeklyTrend
+      };
+    }
+  } catch (gErr) {
+    console.warn("[Demand Prediction] Gemini fallback:", gErr.message);
+  }
+
+  // 2. Try Python microservice next
+  const pythonRes = await callPythonAi("/api/ai/demand-prediction", { city });
+  if (pythonRes.success) return pythonRes.data;
 
   return {
     city,

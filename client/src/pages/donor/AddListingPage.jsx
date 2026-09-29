@@ -74,6 +74,7 @@ export default function AddListingPage() {
 
   // Dynamic AI Recognition Suggestion (Module 1)
   const [aiVision, setAiVision] = useState(null);
+  const [imageBase64, setImageBase64] = useState('');
 
   // Recalculate AI Risk whenever relevant inputs change
   useEffect(() => {
@@ -106,6 +107,20 @@ export default function AddListingPage() {
     const localUrl = URL.createObjectURL(file);
     setImagePreview(localUrl);
 
+    // Read base64 for Gemini Vision Multimodal AI
+    let b64 = '';
+    try {
+      b64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result || '');
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+      setImageBase64(b64);
+    } catch (readErr) {
+      console.warn('Failed to read image as base64', readErr);
+    }
+
     // Upload to server
     setUploadingImage(true);
     setAiAnalyzing(true);
@@ -119,15 +134,15 @@ export default function AddListingPage() {
       if (uploadRes.data?.success && typeof uploadRes.data?.imageUrl === 'string') {
         const serverUrl = uploadRes.data.imageUrl;
         setForm(prev => ({ ...prev, image: serverUrl }));
-        await triggerAiRecognition(file.name, serverUrl);
+        await triggerAiRecognition(file.name, serverUrl, b64, file.type);
       } else {
         console.warn('Upload did not return a valid imageUrl string:', uploadRes.data);
-        await triggerAiRecognition(file.name, localUrl);
+        await triggerAiRecognition(file.name, localUrl, b64, file.type);
       }
     } catch (err) {
       console.warn('Server upload failed, using local preview for demo', err);
       setForm(prev => ({ ...prev, image: localUrl }));
-      await triggerAiRecognition(file.name, localUrl);
+      await triggerAiRecognition(file.name, localUrl, b64, file.type);
     } finally {
       setUploadingImage(false);
       setAiAnalyzing(false);
@@ -135,14 +150,17 @@ export default function AddListingPage() {
   };
 
   // Trigger AI Recognition on selected image or hint
-  const triggerAiRecognition = async (textHint = '', activeImageUrl = null) => {
+  const triggerAiRecognition = async (textHint = '', activeImageUrl = null, b64Override = null, mimeOverride = null) => {
     setAiAnalyzing(true);
     const imageToAnalyze = activeImageUrl !== null ? activeImageUrl : form.image;
+    const b64Data = b64Override !== null ? b64Override : imageBase64;
     try {
       const res = await api.post('/ai/food-recognition', {
         textHint: textHint || form.foodName || '',
         imageName: imageToAnalyze || '',
-        filename: textHint || ''
+        filename: textHint || '',
+        imageBase64: b64Data || '',
+        mimeType: mimeOverride || 'image/jpeg'
       });
       if (res.data.success) {
         const v = res.data.result;
@@ -164,6 +182,7 @@ export default function AddListingPage() {
   // Select a preset sample image
   const selectSampleImage = (sample) => {
     setImagePreview(sample.url);
+    setImageBase64('');
     setForm(prev => ({
       ...prev,
       image: sample.url,
@@ -171,7 +190,7 @@ export default function AddListingPage() {
       category: sample.category,
       dietaryType: sample.dietary
     }));
-    triggerAiRecognition(sample.name, sample.url);
+    triggerAiRecognition(sample.name, sample.url, '', 'image/jpeg');
   };
 
   const handleSubmit = async (e) => {
@@ -294,16 +313,31 @@ export default function AddListingPage() {
               </div>
             </div>
 
+            {/* AI Analyzing Status Indicator */}
+            {aiAnalyzing && (
+              <div className="p-3 bg-indigo-50/80 border border-indigo-200/90 rounded-xl text-xs text-indigo-800 font-semibold flex items-center gap-2 animate-pulse">
+                <Sparkles className="w-4 h-4 animate-spin text-indigo-600 shrink-0" />
+                <span>AI Vision is inspecting image features and identifying food items...</span>
+              </div>
+            )}
+
             {/* AI Module 1 Analysis Feedback Card */}
             {aiVision && (
               <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs space-y-2 animate-fadeIn">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                   <span className="font-bold text-emerald-900 flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-emerald-600" /> AI Vision Classification Result
                   </span>
-                  <span className="font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full text-[11px]">
-                    {aiVision.confidence}% AI Confidence
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {aiVision.modelArchitecture && (
+                      <span className="font-bold text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                        {aiVision.modelArchitecture.includes('Gemini') ? '⚡ Google Gemini 1.5 Flash' : 'Local Heuristics'}
+                      </span>
+                    )}
+                    <span className="font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full text-[11px]">
+                      {aiVision.confidence}% AI Confidence
+                    </span>
+                  </div>
                 </div>
                 <p className="font-bold text-slate-900 text-sm">{aiVision.detectedItem}</p>
                 <p className="text-[11px] text-slate-600 leading-relaxed">{aiVision.explanation}</p>
@@ -532,7 +566,7 @@ export default function AddListingPage() {
 
               <div className="text-[11px] text-slate-400 leading-normal pt-2 border-t border-slate-100">
                 <p className="font-semibold text-slate-500">Predictive Model:</p>
-                <p>US FDA Danger Zone and FSSAI microbial criteria. Non-lab estimation.</p>
+                <p className="font-medium text-slate-700">{aiRisk.aiModelUsed || 'FDA/FSSAI Time-Temperature Microbial Engine (Local Baseline)'}</p>
               </div>
             </div>
           </div>

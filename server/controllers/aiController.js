@@ -11,8 +11,8 @@ import { FoodListing } from "../models/FoodListing.js";
 // AI Module 1: Food Recognition
 export const handleFoodRecognition = async (req, res, next) => {
   try {
-    const { imageName, filename, textHint } = req.body;
-    const result = await recognizeFood({ imageName, filename, textHint });
+    const { imageName, filename, textHint, imageBase64, mimeType } = req.body;
+    const result = await recognizeFood({ imageName, filename, textHint, imageBase64, mimeType });
     res.json({ success: true, module: "AI-Module-1-Food-Recognition", result });
   } catch (error) {
     next(error);
