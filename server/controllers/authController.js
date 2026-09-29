@@ -58,7 +58,7 @@ export const register = async (req, res, next) => {
       verified: true
     });
 
-    const token = generateToken(user._id, user.role);
+    const token = generateToken(user._id || user.id, user.role);
 
     const { password: _, ...safeUser } = user;
     res.status(201).json({
@@ -87,12 +87,13 @@ export const login = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    const isMatch = await bcrypt.compare(cleanPassword, user.password);
+    const isMatch = (await bcrypt.compare(cleanPassword, user.password)) || (await bcrypt.compare(password, user.password));
     if (!isMatch) {
+      console.warn(`[Auth] Password mismatch for ${cleanEmail}`);
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    const token = generateToken(user._id, user.role);
+    const token = generateToken(user._id || user.id, user.role);
     const { password: _, ...safeUser } = user;
 
     res.json({
@@ -178,7 +179,7 @@ export const adminLogin = async (req, res, next) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(cleanPassword, user.password);
+    const isMatch = (await bcrypt.compare(cleanPassword, user.password)) || (await bcrypt.compare(password, user.password));
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -186,7 +187,7 @@ export const adminLogin = async (req, res, next) => {
       });
     }
 
-    const token = generateToken(user._id, user.role);
+    const token = generateToken(user._id || user.id, user.role);
     const { password: _, ...safeUser } = user;
 
     res.json({

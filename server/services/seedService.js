@@ -62,9 +62,6 @@ export async function purgeAllFakeRecords() {
  */
 export async function seedDatabase() {
   try {
-    // Always purge fake demo accounts and mock listings
-    await purgeAllFakeRecords();
-
     // Check if the administrator account exists
     let adminUser = await User.findOne({ email: "admin@foodresq.org" });
 

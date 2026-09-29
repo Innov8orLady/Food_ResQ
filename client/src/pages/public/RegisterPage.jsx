@@ -70,6 +70,21 @@ export default function RegisterPage() {
           <p className="text-xs text-slate-500">Join our surplus food rescue and zero-waste network</p>
         </div>
 
+        {typeof window !== 'undefined' && window.location.hostname.includes('-projects.vercel.app') && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+            <p className="font-bold flex items-center gap-1.5 text-amber-800">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              Private Preview Link Detected
+            </p>
+            <p className="text-[11px] text-amber-700 leading-relaxed">
+              Vercel protects preview URLs with authentication. Please register on the official live domain:{' '}
+              <a href="https://food-res-q-jf52.vercel.app/register" className="font-bold underline text-amber-900">
+                food-res-q-jf52.vercel.app
+              </a>
+            </p>
+          </div>
+        )}
+
         {error && (
           <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />

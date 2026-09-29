@@ -42,7 +42,11 @@ export const AuthProvider = ({ children }) => {
       }
       throw new Error(res.data.message || 'Login failed');
     } catch (err) {
-      throw new Error(err.response?.data?.message || err.message || 'Invalid email or password');
+      const serverMsg = err.response?.data?.message || err.response?.data?.error?.message;
+      if (serverMsg === "Protected deployment" || serverMsg === "Protected by Vercel Authentication") {
+        throw new Error("You are viewing a private preview URL. Please access the live portal at https://food-res-q-jf52.vercel.app/login");
+      }
+      throw new Error(serverMsg || err.message || 'Invalid email or password');
     }
   };
 
@@ -63,7 +67,11 @@ export const AuthProvider = ({ children }) => {
       }
       throw new Error(res.data.message || 'Registration failed');
     } catch (err) {
-      throw new Error(err.response?.data?.message || err.message || 'Registration failed');
+      const serverMsg = err.response?.data?.message || err.response?.data?.error?.message;
+      if (serverMsg === "Protected deployment" || serverMsg === "Protected by Vercel Authentication") {
+        throw new Error("You are viewing a private preview URL. Please access the live portal at https://food-res-q-jf52.vercel.app/register");
+      }
+      throw new Error(serverMsg || err.message || 'Registration failed');
     }
   };
 
@@ -98,7 +106,11 @@ export const AuthProvider = ({ children }) => {
       }
       throw new Error(res.data.message || 'Administrator authentication failed');
     } catch (err) {
-      throw new Error(err.response?.data?.message || err.message || 'Administrator authentication failed');
+      const serverMsg = err.response?.data?.message || err.response?.data?.error?.message;
+      if (serverMsg === "Protected deployment" || serverMsg === "Protected by Vercel Authentication") {
+        throw new Error("You are viewing a private preview URL. Please access the live admin portal at https://food-res-q-jf52.vercel.app/admin/login");
+      }
+      throw new Error(serverMsg || err.message || 'Administrator authentication failed');
     }
   };
 

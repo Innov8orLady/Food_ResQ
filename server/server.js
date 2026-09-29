@@ -34,22 +34,25 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Static uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-let isInitialized = false;
+import { User } from "./models/User.js";
+
+let initPromise = null;
 async function initializeApp() {
-  await connectDB();
-  await seedDatabase();
-  isInitialized = true;
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    try {
+      await connectDB();
+      await seedDatabase();
+    } catch (err) {
+      console.warn("DB init warning:", err.message);
+    }
+  })();
+  return initPromise;
 }
 
 // Ensure database and seed store are ready on serverless calls BEFORE any route executes
 app.use(async (req, res, next) => {
-  if (!isInitialized) {
-    try {
-      await initializeApp();
-    } catch (err) {
-      console.warn("DB init warning:", err.message);
-    }
-  }
+  await initializeApp();
   next();
 });
 
@@ -63,12 +66,20 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/users", userRoutes);
 
 // Health check endpoint
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
+  let registeredEmails = [];
+  try {
+    const users = await User.find();
+    registeredEmails = users.map(u => u.email);
+  } catch (e) {}
+
   res.json({
     status: "online",
     platform: "FoodResQ - AI-Powered Food Rescue & Waste Intelligence",
     version: "1.0.0",
     database: getDbStatus(),
+    userCount: registeredEmails.length,
+    registeredEmails,
     aiModules: [
       "AI-Module-1: Food Recognition",
       "AI-Module-2: Food Safety / Risk Prediction",
