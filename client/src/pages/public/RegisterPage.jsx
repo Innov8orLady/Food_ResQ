@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { UtensilsCrossed, AlertCircle, ExternalLink } from 'lucide-react';
+import { UtensilsCrossed, AlertCircle, ExternalLink, ShieldCheck, Mail, CheckCircle2 } from 'lucide-react';
+import OtpVerificationModal from '../../components/OtpVerificationModal';
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -23,7 +24,14 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [dbStatus, setDbStatus] = useState(null);
-  const { register } = useAuth();
+
+  // OTP Verification States
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [previewOtp, setPreviewOtp] = useState(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+
+  const { register, sendOtp } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,29 +49,79 @@ export default function RegisterPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  // Step 1: Request OTP and open verification modal
+  const handleInitiateRegister = async (e) => {
     e.preventDefault();
     setError('');
+
+    const cleanEmail = formData.email.trim();
+    const cleanPassword = formData.password.trim();
+    const cleanName = formData.name.trim();
+
+    if (!cleanEmail || !cleanPassword || !cleanName) {
+      setError('Please fill in your name, email, and password.');
+      return;
+    }
+
+    if (cleanPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
     setLoading(true);
+    try {
+      // Send 6-digit OTP code to the provided email
+      const res = await sendOtp(cleanEmail, cleanName, 'registration');
+      setPreviewOtp(res.previewOtp || null);
+      setOtpError('');
+      setShowOtpModal(true);
+    } catch (err) {
+      setError(err.message || 'Failed to send verification code. Please check your email.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: User submits the 6-digit code from the modal
+  const handleVerifyAndCompleteRegister = async (otpCode) => {
+    setOtpError('');
+    setOtpLoading(true);
     try {
       const sanitizedData = {
         ...formData,
         name: formData.name.trim(),
-        email: formData.email.trim(),
+        email: formData.email.trim().toLowerCase(),
         password: formData.password.trim(),
         organizationName: (formData.organizationName || formData.name).trim(),
         phone: formData.phone.trim(),
         address: formData.address.trim(),
-        city: formData.city.trim()
+        city: formData.city.trim(),
+        otp: otpCode
       };
+
       const res = await register(sanitizedData);
+      setShowOtpModal(false);
+
       if (res.user.role === 'donor') navigate('/donor/dashboard');
       else if (res.user.role === 'recipient') navigate('/recipient/dashboard');
       else navigate('/');
     } catch (err) {
-      setError(err.message || 'Registration failed');
+      setOtpError(err.message || 'Verification failed. Please try again.');
     } finally {
-      setLoading(false);
+      setOtpLoading(false);
+    }
+  };
+
+  // Resend OTP code
+  const handleResendOtp = async () => {
+    try {
+      setOtpError('');
+      const res = await sendOtp(formData.email.trim(), formData.name.trim(), 'registration');
+      if (res.previewOtp) {
+        setPreviewOtp(res.previewOtp);
+      }
+    } catch (err) {
+      setOtpError(err.message || 'Failed to resend code');
     }
   };
 
@@ -78,6 +136,9 @@ export default function RegisterPage() {
       <div className="relative z-10 w-full max-w-xl bg-white/95 backdrop-blur-md p-8 rounded-3xl border border-white/40 shadow-2xl space-y-6">
         
         <div className="text-center space-y-1">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-md shadow-emerald-600/30 mb-2">
+            <UtensilsCrossed className="w-6 h-6" />
+          </div>
           <h2 className="text-2xl font-black text-slate-900">Create FoodResQ Account</h2>
           <p className="text-xs text-slate-500">Join our surplus food rescue and zero-waste network</p>
         </div>
@@ -120,7 +181,6 @@ export default function RegisterPage() {
           </div>
         )}
 
-
         {error && (
           <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -128,7 +188,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleInitiateRegister} className="space-y-4">
           
           {/* Role selector */}
           <div>
@@ -139,55 +199,40 @@ export default function RegisterPage() {
                 onClick={() => setFormData({ ...formData, role: 'donor', organizationType: 'Restaurant' })}
                 className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
                   formData.role === 'donor'
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                🌱 Food Donor (Restaurant/Hotel)
+                🍲 Food Donor (Restaurant/Hotel)
               </button>
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'recipient', organizationType: 'NGO' })}
                 className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
                   formData.role === 'recipient'
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                🏢 Food Recipient (NGO/Shelter)
+                🤝 Food Recipient (NGO/Shelter)
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Contact Person</label>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Your Full Name</label>
               <input
                 type="text"
                 required
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Ramesh Kumar"
+                placeholder="e.g. Priya Sharma"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Organization Name</label>
-              <input
-                type="text"
-                required
-                name="organizationName"
-                value={formData.organizationName}
-                onChange={handleChange}
-                placeholder="Green Leaf Diner"
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
               <input
@@ -196,7 +241,21 @@ export default function RegisterPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="contact@org.com"
+                placeholder="name@organization.org"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Organization Name</label>
+              <input
+                type="text"
+                name="organizationName"
+                value={formData.organizationName}
+                onChange={handleChange}
+                placeholder="Taj Caterers / Hope Shelter"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
@@ -245,21 +304,38 @@ export default function RegisterPage() {
             <input
               type="password"
               required
+              minLength={6}
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder="•••••••• (min 6 characters)"
               className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/30 transition-all disabled:opacity-50"
-          >
-            {loading ? 'Creating Account...' : 'Complete Registration'}
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Sending Verification Code...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Verify Email & Create Account</span>
+                </>
+              )}
+            </button>
+            <p className="text-[11px] text-slate-400 text-center mt-2 flex items-center justify-center gap-1">
+              <Mail className="w-3.5 h-3.5 text-emerald-600" />
+              <span>A 6-digit OTP code will be sent to your email to verify authenticity.</span>
+            </p>
+          </div>
         </form>
 
         <p className="text-center text-xs text-slate-500">
@@ -270,6 +346,18 @@ export default function RegisterPage() {
         </p>
 
       </div>
+
+      {/* 6-Digit OTP Verification Modal */}
+      <OtpVerificationModal
+        isOpen={showOtpModal}
+        email={formData.email}
+        previewOtp={previewOtp}
+        loading={otpLoading}
+        error={otpError}
+        onVerify={handleVerifyAndCompleteRegister}
+        onResend={handleResendOtp}
+        onCancel={() => setShowOtpModal(false)}
+      />
     </div>
   );
 }

@@ -56,7 +56,8 @@ export const AuthProvider = ({ children }) => {
         ...formData,
         email: (formData.email || '').trim().toLowerCase(),
         password: (formData.password || '').trim(),
-        name: (formData.name || '').trim()
+        name: (formData.name || '').trim(),
+        otp: formData.otp ? String(formData.otp).trim() : undefined
       };
       const res = await api.post('/auth/register', sanitized);
       if (res.data.success) {
@@ -72,6 +73,29 @@ export const AuthProvider = ({ children }) => {
         throw new Error("You are viewing a private preview URL. Please access the live portal at https://food-res-q-jf52.vercel.app/register");
       }
       throw new Error(serverMsg || err.message || 'Registration failed');
+    }
+  };
+
+  const sendOtp = async (email, name = '', purpose = 'registration') => {
+    try {
+      const cleanEmail = (email || '').trim().toLowerCase();
+      const res = await api.post('/auth/send-otp', { email: cleanEmail, name, purpose });
+      return res.data;
+    } catch (err) {
+      const serverMsg = err.response?.data?.message || err.response?.data?.error?.message;
+      throw new Error(serverMsg || err.message || 'Failed to send verification code');
+    }
+  };
+
+  const verifyOtpCode = async (email, otp, purpose = 'registration') => {
+    try {
+      const cleanEmail = (email || '').trim().toLowerCase();
+      const cleanOtp = String(otp || '').trim();
+      const res = await api.post('/auth/verify-otp', { email: cleanEmail, otp: cleanOtp, purpose });
+      return res.data;
+    } catch (err) {
+      const serverMsg = err.response?.data?.message || err.response?.data?.error?.message;
+      throw new Error(serverMsg || err.message || 'Failed to verify code');
     }
   };
 
@@ -138,7 +162,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, resetPassword, quickDemoLogin, adminLogin, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, sendOtp, verifyOtpCode, resetPassword, quickDemoLogin, adminLogin, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

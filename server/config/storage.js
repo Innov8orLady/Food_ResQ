@@ -140,5 +140,6 @@ export const collections = {
   claims: new Collection("claims"),
   pickups: new Collection("pickups"),
   notifications: new Collection("notifications"),
-  forecasts: new Collection("forecasts")
+  forecasts: new Collection("forecasts"),
+  otps: new Collection("otps")
 };

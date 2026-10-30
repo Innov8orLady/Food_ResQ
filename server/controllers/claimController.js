@@ -35,6 +35,8 @@ export const createClaim = async (req, res, next) => {
       claimedAt: new Date()
     });
 
+    const handoverOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
     const claim = await Claim.create({
       listingId,
       donorId: listing.donorId,
@@ -44,6 +46,7 @@ export const createClaim = async (req, res, next) => {
       recipientPhone: recipient.phone || "",
       quantity: requestedQty,
       status: "CONFIRMED",
+      handoverOtp,
       pickupTime: pickupTime ? new Date(pickupTime) : new Date(Date.now() + 2 * 3600 * 1000),
       pickupNotes: pickupNotes || "Standard collection vehicle."
     });
@@ -146,6 +149,16 @@ export const updateClaimStatus = async (req, res, next) => {
     const claim = await Claim.findById(id);
     if (!claim) {
       return res.status(404).json({ success: false, message: "Claim not found." });
+    }
+
+    if (status === "COMPLETED" && claim.handoverOtp && req.body.otp) {
+      const providedOtp = String(req.body.otp || "").trim();
+      if (providedOtp !== claim.handoverOtp) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid handover OTP. The code does not match donor's verification code.`
+        });
+      }
     }
 
     const listing = await FoodListing.findById(claim.listingId);

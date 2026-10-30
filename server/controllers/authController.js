@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
+import { sendOtpEmail, verifyOtp } from "../services/otpService.js";
 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET || "foodresq_jwt_secret_key_super_secure_2026", {
@@ -10,7 +11,7 @@ const generateToken = (id, role) => {
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, phone, organizationName, organizationType, address, city, coordinates, capacity, dietaryPreferences } = req.body;
+    const { name, email, password, role, phone, organizationName, organizationType, address, city, coordinates, capacity, dietaryPreferences, otp } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ success: false, message: "Please provide all required registration fields." });
@@ -21,6 +22,13 @@ export const register = async (req, res, next) => {
 
     if (!cleanEmail || !cleanPassword) {
       return res.status(400).json({ success: false, message: "Email and password cannot be blank." });
+    }
+
+    if (otp) {
+      const otpRes = await verifyOtp({ email: cleanEmail, otp, purpose: "registration" });
+      if (!otpRes.success) {
+        return res.status(400).json({ success: false, message: otpRes.message });
+      }
     }
 
     const normalizedRole = role.toLowerCase().trim();
@@ -229,6 +237,45 @@ export const resetPassword = async (req, res, next) => {
       success: true,
       message: `Password for ${cleanEmail} updated successfully. You can now sign in.`
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requestOtp = async (req, res, next) => {
+  try {
+    const { email, name, purpose = "registration" } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required to send verification code." });
+    }
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (purpose === "registration") {
+      const existing = await User.findOne({ email: cleanEmail });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "An account with this email address already exists. Please sign in." });
+      }
+    }
+
+    const result = await sendOtpEmail({ email: cleanEmail, name: name || "Food Hero", purpose });
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyOtpCode = async (req, res, next) => {
+  try {
+    const { email, otp, purpose = "registration" } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Email and verification code are required." });
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const result = await verifyOtp({ email: cleanEmail, otp, purpose });
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    res.json(result);
   } catch (error) {
     next(error);
   }

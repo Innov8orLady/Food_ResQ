@@ -14,6 +14,7 @@ const ClaimSchema = new mongoose.Schema({
     enum: ["PENDING", "CONFIRMED", "PICKUP_SCHEDULED", "COMPLETED", "CANCELLED"],
     default: "CONFIRMED"
   },
+  handoverOtp: { type: String, default: "" },
   pickupTime: { type: Date, default: null },
   pickupNotes: { type: String, default: "" },
   claimedAt: { type: Date, default: Date.now },
