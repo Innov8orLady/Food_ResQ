@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { UtensilsCrossed, AlertCircle, ExternalLink, ShieldCheck, Mail, CheckCircle2 } from 'lucide-react';
+import { UtensilsCrossed, AlertCircle, ExternalLink, ShieldCheck, Mail, Phone, CheckCircle2 } from 'lucide-react';
 import OtpVerificationModal from '../../components/OtpVerificationModal';
 
 export default function RegisterPage() {
@@ -21,13 +21,13 @@ export default function RegisterPage() {
     capacity: 60
   });
 
+  const [verificationChannel, setVerificationChannel] = useState('email'); // 'email' | 'sms'
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [dbStatus, setDbStatus] = useState(null);
 
   // OTP Verification States
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [previewOtp, setPreviewOtp] = useState(null);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
 
@@ -57,9 +57,15 @@ export default function RegisterPage() {
     const cleanEmail = formData.email.trim();
     const cleanPassword = formData.password.trim();
     const cleanName = formData.name.trim();
+    const cleanPhone = formData.phone.trim();
 
     if (!cleanEmail || !cleanPassword || !cleanName) {
       setError('Please fill in your name, email, and password.');
+      return;
+    }
+
+    if (verificationChannel === 'sms' && !cleanPhone) {
+      setError('Please provide a valid mobile phone number to receive the verification SMS.');
       return;
     }
 
@@ -70,13 +76,18 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      // Send 6-digit OTP code to the provided email
-      const res = await sendOtp(cleanEmail, cleanName, 'registration');
-      setPreviewOtp(res.previewOtp || null);
+      // Send real 6-digit OTP code to the provided email or phone
+      await sendOtp({
+        email: cleanEmail,
+        phone: cleanPhone,
+        channel: verificationChannel,
+        name: cleanName,
+        purpose: 'registration'
+      });
       setOtpError('');
       setShowOtpModal(true);
     } catch (err) {
-      setError(err.message || 'Failed to send verification code. Please check your email.');
+      setError(err.message || 'Failed to dispatch verification code. Please check your details.');
     } finally {
       setLoading(false);
     }
@@ -106,7 +117,7 @@ export default function RegisterPage() {
       else if (res.user.role === 'recipient') navigate('/recipient/dashboard');
       else navigate('/');
     } catch (err) {
-      setOtpError(err.message || 'Verification failed. Please try again.');
+      setOtpError(err.message || 'Verification failed. Please check the code and try again.');
     } finally {
       setOtpLoading(false);
     }
@@ -116,10 +127,13 @@ export default function RegisterPage() {
   const handleResendOtp = async () => {
     try {
       setOtpError('');
-      const res = await sendOtp(formData.email.trim(), formData.name.trim(), 'registration');
-      if (res.previewOtp) {
-        setPreviewOtp(res.previewOtp);
-      }
+      await sendOtp({
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        channel: verificationChannel,
+        name: formData.name.trim(),
+        purpose: 'registration'
+      });
     } catch (err) {
       setOtpError(err.message || 'Failed to resend code');
     }
@@ -261,10 +275,13 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Phone Number</label>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Phone Number {verificationChannel === 'sms' && <span className="text-emerald-600">*</span>}
+              </label>
               <input
                 type="text"
                 name="phone"
+                required={verificationChannel === 'sms'}
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="+91 98765 43210"
@@ -313,6 +330,39 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* OTP Verification Method Selector */}
+          <div className="pt-1">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Receive Verification Code Via
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setVerificationChannel('email')}
+                className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  verificationChannel === 'email'
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Email Address</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setVerificationChannel('sms')}
+                className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  verificationChannel === 'sms'
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>Phone SMS</span>
+              </button>
+            </div>
+          </div>
+
           <div className="pt-2">
             <button
               type="submit"
@@ -327,13 +377,24 @@ export default function RegisterPage() {
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Verify Email & Create Account</span>
+                  <span>
+                    Verify via {verificationChannel === 'sms' ? 'SMS' : 'Email'} & Create Account
+                  </span>
                 </>
               )}
             </button>
-            <p className="text-[11px] text-slate-400 text-center mt-2 flex items-center justify-center gap-1">
-              <Mail className="w-3.5 h-3.5 text-emerald-600" />
-              <span>A 6-digit OTP code will be sent to your email to verify authenticity.</span>
+            <p className="text-[11px] text-slate-400 text-center mt-2 flex items-center justify-center gap-1.5">
+              {verificationChannel === 'sms' ? (
+                <>
+                  <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>A real 6-digit OTP code will be sent to your mobile phone via SMS.</span>
+                </>
+              ) : (
+                <>
+                  <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>A real 6-digit OTP code will be sent to your email inbox.</span>
+                </>
+              )}
             </p>
           </div>
         </form>
@@ -347,11 +408,12 @@ export default function RegisterPage() {
 
       </div>
 
-      {/* 6-Digit OTP Verification Modal */}
+      {/* 6-Digit Real OTP Verification Modal */}
       <OtpVerificationModal
         isOpen={showOtpModal}
         email={formData.email}
-        previewOtp={previewOtp}
+        phone={formData.phone}
+        channel={verificationChannel}
         loading={otpLoading}
         error={otpError}
         onVerify={handleVerifyAndCompleteRegister}

@@ -76,10 +76,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const sendOtp = async (email, name = '', purpose = 'registration') => {
+  const sendOtp = async (params) => {
     try {
-      const cleanEmail = (email || '').trim().toLowerCase();
-      const res = await api.post('/auth/send-otp', { email: cleanEmail, name, purpose });
+      // Support both object params { email, phone, channel, name, purpose } and legacy (email, name, purpose)
+      const payload = typeof params === 'object' && params !== null
+        ? {
+            email: (params.email || '').trim().toLowerCase(),
+            phone: (params.phone || '').trim(),
+            channel: params.channel || 'email',
+            name: params.name || '',
+            purpose: params.purpose || 'registration'
+          }
+        : {
+            email: (arguments[0] || '').trim().toLowerCase(),
+            name: arguments[1] || '',
+            purpose: arguments[2] || 'registration',
+            channel: 'email'
+          };
+
+      const res = await api.post('/auth/send-otp', payload);
       return res.data;
     } catch (err) {
       const serverMsg = err.response?.data?.message || err.response?.data?.error?.message;
@@ -87,11 +102,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const verifyOtpCode = async (email, otp, purpose = 'registration') => {
+  const verifyOtpCode = async (params, maybeOtp, maybePurpose) => {
     try {
-      const cleanEmail = (email || '').trim().toLowerCase();
-      const cleanOtp = String(otp || '').trim();
-      const res = await api.post('/auth/verify-otp', { email: cleanEmail, otp: cleanOtp, purpose });
+      const payload = typeof params === 'object' && params !== null
+        ? {
+            email: (params.email || '').trim().toLowerCase(),
+            phone: (params.phone || '').trim(),
+            otp: String(params.otp || '').trim(),
+            purpose: params.purpose || 'registration'
+          }
+        : {
+            email: (params || '').trim().toLowerCase(),
+            otp: String(maybeOtp || '').trim(),
+            purpose: maybePurpose || 'registration'
+          };
+
+      const res = await api.post('/auth/verify-otp', payload);
       return res.data;
     } catch (err) {
       const serverMsg = err.response?.data?.message || err.response?.data?.error?.message;

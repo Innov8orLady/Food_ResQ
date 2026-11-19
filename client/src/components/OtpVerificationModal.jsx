@@ -1,21 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, Mail, ArrowRight, RotateCcw, AlertCircle, Sparkles, CheckCircle2, X } from 'lucide-react';
+import { ShieldCheck, Mail, Phone, ArrowRight, RotateCcw, AlertCircle, X } from 'lucide-react';
 
 export default function OtpVerificationModal({
   isOpen,
-  email,
+  email = '',
+  phone = '',
+  channel = 'email',
   onVerify,
   onResend,
   onCancel,
   loading = false,
   error = '',
-  previewOtp = null,
   purpose = 'registration'
 }) {
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
+
+  const isSms = channel === 'sms' || channel === 'phone';
+  const targetRecipient = isSms ? (phone || 'your phone number') : (email || 'your email address');
 
   // Focus first input when modal opens
   useEffect(() => {
@@ -45,7 +49,6 @@ export default function OtpVerificationModal({
   if (!isOpen) return null;
 
   const handleDigitChange = (index, value) => {
-    // Keep only the last character entered and ensure it's a digit
     const cleaned = value.replace(/\D/g, '').slice(-1);
     const newDigits = [...digits];
     newDigits[index] = cleaned;
@@ -94,14 +97,6 @@ export default function OtpVerificationModal({
     }
   };
 
-  const handleAutoFill = () => {
-    if (previewOtp && String(previewOtp).length === 6) {
-      const otpArray = String(previewOtp).split('');
-      setDigits(otpArray);
-      inputRefs.current[5]?.focus();
-    }
-  };
-
   const handleResendClick = async () => {
     if (!canResend || loading) return;
     setTimer(60);
@@ -128,36 +123,16 @@ export default function OtpVerificationModal({
         {/* Modal Header */}
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center mx-auto shadow-sm">
-            <ShieldCheck className="w-7 h-7" />
+            {isSms ? <Phone className="w-7 h-7" /> : <Mail className="w-7 h-7" />}
           </div>
-          <h3 className="text-xl font-black text-slate-900 tracking-tight">Verify Your Email</h3>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">
+            {isSms ? 'Verify Phone Number' : 'Verify Email Address'}
+          </h3>
           <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-            We sent a 6-digit verification code to <br />
-            <strong className="text-slate-800 font-bold">{email}</strong>
+            We sent a real 6-digit verification code to <br />
+            <strong className="text-slate-800 font-bold break-all">{targetRecipient}</strong>
           </p>
         </div>
-
-        {/* Demo Test Code Quick Helper (Shows preview OTP so testing on Vercel is instant) */}
-        {previewOtp && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-sm">
-            <div className="flex items-center gap-2 text-emerald-900">
-              <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-              <div>
-                <span className="font-bold">Test Code: </span>
-                <span className="font-mono font-black tracking-widest text-emerald-700 text-sm bg-white px-2 py-0.5 rounded border border-emerald-200">
-                  {previewOtp}
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleAutoFill}
-              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm transition-all"
-            >
-              Auto-Fill
-            </button>
-          </div>
-        )}
 
         {/* Error Alert */}
         {error && (
@@ -193,7 +168,7 @@ export default function OtpVerificationModal({
           <button
             type="submit"
             disabled={!isComplete || loading}
-            className="w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
               <>
@@ -209,14 +184,14 @@ export default function OtpVerificationModal({
           </button>
         </form>
 
-        {/* Resend and Change Email controls */}
+        {/* Resend and Change controls */}
         <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
           <button
             type="button"
             onClick={onCancel}
             className="text-slate-500 hover:text-slate-800 font-semibold"
           >
-            Change Email
+            Change {isSms ? 'Phone' : 'Email'}
           </button>
 
           <div className="text-right">
@@ -225,14 +200,14 @@ export default function OtpVerificationModal({
                 type="button"
                 onClick={handleResendClick}
                 disabled={loading}
-                className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1"
+                className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Resend Code</span>
               </button>
             ) : (
               <span className="text-slate-400 font-medium">
-                Resend code in <strong className="font-bold text-slate-700">{timer}s</strong>
+                Resend in <strong className="font-bold text-slate-700">{timer}s</strong>
               </span>
             )}
           </div>
