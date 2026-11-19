@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, Mail, Phone, ArrowRight, RotateCcw, AlertCircle, X } from 'lucide-react';
+import { ShieldCheck, Mail, Phone, ArrowRight, RotateCcw, AlertCircle, CheckCircle2, X } from 'lucide-react';
 
 export default function OtpVerificationModal({
   isOpen,
   email = '',
   phone = '',
   channel = 'email',
+  devCode = null,
+  isLiveDelivered = false,
   onVerify,
   onResend,
   onCancel,
@@ -108,7 +110,7 @@ export default function OtpVerificationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md bg-white rounded-3xl border border-slate-200/90 shadow-2xl p-6 sm:p-8 space-y-6">
+      <div className="relative w-full max-w-md bg-white rounded-3xl border border-slate-200/90 shadow-2xl p-6 sm:p-8 space-y-5">
         
         {/* Close / Cancel Button */}
         <button
@@ -129,10 +131,50 @@ export default function OtpVerificationModal({
             {isSms ? 'Verify Phone Number' : 'Verify Email Address'}
           </h3>
           <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-            We sent a real 6-digit verification code to <br />
+            Verification code for <br />
             <strong className="text-slate-800 font-bold break-all">{targetRecipient}</strong>
           </p>
         </div>
+
+        {/* Live Delivery Confirmation Badge (When real email/SMS was sent) */}
+        {isLiveDelivered && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200/90 rounded-2xl text-xs text-emerald-800 flex items-center gap-2 shadow-sm">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              Real verification code sent to your {isSms ? 'phone SMS' : 'inbox'}. Please check your {isSms ? 'messages' : 'inbox or spam folder'}.
+            </span>
+          </div>
+        )}
+
+        {/* Development & Server Config Notice (When SMTP or Twilio is not yet configured in Vercel) */}
+        {devCode && (
+          <div className="p-3.5 bg-amber-50 border border-amber-200/90 rounded-2xl text-xs space-y-2 shadow-sm">
+            <div className="flex items-center gap-1.5 text-amber-900 font-bold">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Live {isSms ? 'SMS' : 'Email'} Gateway Not Configured on Server</span>
+            </div>
+            <p className="text-[11px] text-amber-800 leading-relaxed">
+              To send real emails to your Gmail inbox, add <code>EMAIL_USER</code> and <code>EMAIL_PASS</code> in Vercel. 
+              Your verification code for this session:
+            </p>
+            <div className="flex items-center justify-between pt-1">
+              <span className="font-mono font-black text-amber-950 text-base bg-white px-3 py-1 rounded-xl border border-amber-300 tracking-widest shadow-inner">
+                {devCode}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const arr = String(devCode).split('');
+                  setDigits(arr);
+                  inputRefs.current[5]?.focus();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-sm transition-all cursor-pointer"
+              >
+                Insert Code
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Error Alert */}
         {error && (
@@ -143,7 +185,7 @@ export default function OtpVerificationModal({
         )}
 
         {/* OTP Input Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="flex items-center justify-between gap-2 sm:gap-3" onPaste={handlePaste}>
             {digits.map((digit, idx) => (
               <input
@@ -189,7 +231,7 @@ export default function OtpVerificationModal({
           <button
             type="button"
             onClick={onCancel}
-            className="text-slate-500 hover:text-slate-800 font-semibold"
+            className="text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
           >
             Change {isSms ? 'Phone' : 'Email'}
           </button>

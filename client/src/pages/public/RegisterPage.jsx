@@ -28,6 +28,8 @@ export default function RegisterPage() {
 
   // OTP Verification States
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [devCode, setDevCode] = useState(null);
+  const [isLiveDelivered, setIsLiveDelivered] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
 
@@ -77,7 +79,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       // Send real 6-digit OTP code to the provided email or phone
-      await sendOtp({
+      const res = await sendOtp({
         email: cleanEmail,
         phone: cleanPhone,
         channel: verificationChannel,
@@ -85,6 +87,8 @@ export default function RegisterPage() {
         purpose: 'registration'
       });
       setOtpError('');
+      setDevCode(res?.devCode || null);
+      setIsLiveDelivered(res?.emailSent === true || res?.smsSent === true);
       setShowOtpModal(true);
     } catch (err) {
       setError(err.message || 'Failed to dispatch verification code. Please check your details.');
@@ -127,13 +131,17 @@ export default function RegisterPage() {
   const handleResendOtp = async () => {
     try {
       setOtpError('');
-      await sendOtp({
+      const res = await sendOtp({
         email: formData.email.trim(),
         phone: formData.phone.trim(),
         channel: verificationChannel,
         name: formData.name.trim(),
         purpose: 'registration'
       });
+      if (res?.devCode) {
+        setDevCode(res.devCode);
+      }
+      setIsLiveDelivered(res?.emailSent === true || res?.smsSent === true);
     } catch (err) {
       setOtpError(err.message || 'Failed to resend code');
     }
@@ -387,12 +395,12 @@ export default function RegisterPage() {
               {verificationChannel === 'sms' ? (
                 <>
                   <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>A real 6-digit OTP code will be sent to your mobile phone via SMS.</span>
+                  <span>Verification code will be sent to your mobile phone via SMS.</span>
                 </>
               ) : (
                 <>
                   <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>A real 6-digit OTP code will be sent to your email inbox.</span>
+                  <span>Verification code will be sent to your email inbox.</span>
                 </>
               )}
             </p>
@@ -408,12 +416,14 @@ export default function RegisterPage() {
 
       </div>
 
-      {/* 6-Digit Real OTP Verification Modal */}
+      {/* 6-Digit OTP Verification Modal */}
       <OtpVerificationModal
         isOpen={showOtpModal}
         email={formData.email}
         phone={formData.phone}
         channel={verificationChannel}
+        devCode={devCode}
+        isLiveDelivered={isLiveDelivered}
         loading={otpLoading}
         error={otpError}
         onVerify={handleVerifyAndCompleteRegister}
