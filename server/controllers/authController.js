@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
-import { sendOtp, verifyOtp } from "../services/otpService.js";
+import { SystemConfig } from "../models/SystemConfig.js";
+import { sendOtp, verifyOtp, getGatewayCredentials } from "../services/otpService.js";
 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET || "foodresq_jwt_secret_key_super_secure_2026", {
@@ -292,4 +293,83 @@ export const verifyOtpCode = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getGatewayStatus = async (req, res, next) => {
+  try {
+    const creds = await getGatewayCredentials();
+    const configuredProviders = [
+      creds.resendKey ? "Resend API" : null,
+      creds.brevoKey ? "Brevo API" : null,
+      creds.sendgridKey ? "SendGrid API" : null,
+      (creds.user && creds.pass) ? `Gmail (${creds.user})` : null,
+      creds.twilioSid ? "Twilio SMS" : null,
+      creds.fast2SmsKey ? "Fast2SMS" : null
+    ].filter(Boolean);
+
+    res.json({
+      success: true,
+      hasEmailGateway: Boolean(creds.resendKey || creds.brevoKey || creds.sendgridKey || (creds.user && creds.pass)),
+      hasSmsGateway: Boolean((creds.twilioSid && creds.twilioAuth && creds.twilioPhone) || creds.fast2SmsKey),
+      configuredProviders
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const saveGatewayCredentials = async (req, res, next) => {
+  try {
+    const {
+      EMAIL_USER,
+      EMAIL_PASS,
+      RESEND_API_KEY,
+      BREVO_API_KEY,
+      SENDGRID_API_KEY,
+      TWILIO_ACCOUNT_SID,
+      TWILIO_AUTH_TOKEN,
+      TWILIO_PHONE_NUMBER,
+      FAST2SMS_API_KEY
+    } = req.body;
+
+    const existing = await SystemConfig.findOne({ key: "gateway_credentials" });
+    const currentValue = (existing && existing.value) || {};
+
+    const updatedValue = {
+      ...currentValue,
+      ...(EMAIL_USER !== undefined && { EMAIL_USER: String(EMAIL_USER).trim() }),
+      ...(EMAIL_PASS !== undefined && { EMAIL_PASS: String(EMAIL_PASS).trim().replace(/\s+/g, '') }),
+      ...(RESEND_API_KEY !== undefined && { RESEND_API_KEY: String(RESEND_API_KEY).trim() }),
+      ...(BREVO_API_KEY !== undefined && { BREVO_API_KEY: String(BREVO_API_KEY).trim() }),
+      ...(SENDGRID_API_KEY !== undefined && { SENDGRID_API_KEY: String(SENDGRID_API_KEY).trim() }),
+      ...(TWILIO_ACCOUNT_SID !== undefined && { TWILIO_ACCOUNT_SID: String(TWILIO_ACCOUNT_SID).trim() }),
+      ...(TWILIO_AUTH_TOKEN !== undefined && { TWILIO_AUTH_TOKEN: String(TWILIO_AUTH_TOKEN).trim() }),
+      ...(TWILIO_PHONE_NUMBER !== undefined && { TWILIO_PHONE_NUMBER: String(TWILIO_PHONE_NUMBER).trim() }),
+      ...(FAST2SMS_API_KEY !== undefined && { FAST2SMS_API_KEY: String(FAST2SMS_API_KEY).trim() })
+    };
+
+    await SystemConfig.findOneAndUpdate(
+      { key: "gateway_credentials" },
+      { key: "gateway_credentials", value: updatedValue },
+      { upsert: true, new: true }
+    );
+
+    const configuredProviders = [
+      updatedValue.RESEND_API_KEY ? "Resend API" : null,
+      updatedValue.BREVO_API_KEY ? "Brevo API" : null,
+      updatedValue.SENDGRID_API_KEY ? "SendGrid API" : null,
+      (updatedValue.EMAIL_USER && updatedValue.EMAIL_PASS) ? `Gmail (${updatedValue.EMAIL_USER})` : null,
+      updatedValue.TWILIO_ACCOUNT_SID ? "Twilio SMS" : null,
+      updatedValue.FAST2SMS_API_KEY ? "Fast2SMS" : null
+    ].filter(Boolean);
+
+    res.json({
+      success: true,
+      message: "Gateway credentials saved successfully in database.",
+      configuredProviders
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 

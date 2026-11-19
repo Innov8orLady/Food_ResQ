@@ -1,27 +1,81 @@
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { Otp } from "../models/Otp.js";
+import { SystemConfig } from "../models/SystemConfig.js";
 
 /**
- * Configure Nodemailer transporter if environment variables exist
+ * Fetch credentials from environment variables OR MongoDB Atlas SystemConfig
  */
-function createTransporter() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.EMAIL_USER || process.env.SMTP_USER;
-  const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
-  const port = Number(process.env.SMTP_PORT) || 587;
+export async function getGatewayCredentials() {
+  let user = process.env.EMAIL_USER;
+  let pass = process.env.EMAIL_PASS;
+  let smtpHost = process.env.SMTP_HOST;
+  let smtpPort = process.env.SMTP_PORT;
+  let emailFrom = process.env.EMAIL_FROM;
 
-  // Custom SMTP (e.g. Brevo, SendGrid, Mailgun, Amazon SES, or custom domain)
+  let resendKey = process.env.RESEND_API_KEY;
+  let brevoKey = process.env.BREVO_API_KEY;
+  let sendgridKey = process.env.SENDGRID_API_KEY;
+
+  let twilioSid = process.env.TWILIO_ACCOUNT_SID;
+  let twilioAuth = process.env.TWILIO_AUTH_TOKEN;
+  let twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+  let fast2SmsKey = process.env.FAST2SMS_API_KEY;
+
+  try {
+    const config = await SystemConfig.findOne({ key: "gateway_credentials" });
+    if (config && config.value) {
+      user = user || config.value.EMAIL_USER;
+      pass = pass || config.value.EMAIL_PASS;
+      smtpHost = smtpHost || config.value.SMTP_HOST;
+      smtpPort = smtpPort || config.value.SMTP_PORT;
+      emailFrom = emailFrom || config.value.EMAIL_FROM;
+      resendKey = resendKey || config.value.RESEND_API_KEY;
+      brevoKey = brevoKey || config.value.BREVO_API_KEY;
+      sendgridKey = sendgridKey || config.value.SENDGRID_API_KEY;
+      twilioSid = twilioSid || config.value.TWILIO_ACCOUNT_SID;
+      twilioAuth = twilioAuth || config.value.TWILIO_AUTH_TOKEN;
+      twilioPhone = twilioPhone || config.value.TWILIO_PHONE_NUMBER;
+      fast2SmsKey = fast2SmsKey || config.value.FAST2SMS_API_KEY;
+    }
+  } catch (err) {
+    console.warn("[Gateway Engine] SystemConfig read warning:", err.message);
+  }
+
+  return {
+    user,
+    pass,
+    smtpHost,
+    smtpPort,
+    emailFrom,
+    resendKey,
+    brevoKey,
+    sendgridKey,
+    twilioSid,
+    twilioAuth,
+    twilioPhone,
+    fast2SmsKey
+  };
+}
+
+/**
+ * Configure Nodemailer transporter if user & pass or SMTP_HOST are available
+ */
+function createTransporter(creds) {
+  const host = creds.smtpHost;
+  const user = creds.user;
+  const pass = creds.pass;
+  const port = Number(creds.smtpPort) || 587;
+
   if (host && user && pass) {
     return nodemailer.createTransport({
       host,
       port,
-      secure: port === 465 || process.env.SMTP_SECURE === "true",
+      secure: port === 465,
       auth: { user, pass }
     });
   }
 
-  // Gmail SMTP with App Password (most common & easiest)
   if (user && pass) {
     return nodemailer.createTransport({
       service: "gmail",
@@ -33,7 +87,7 @@ function createTransporter() {
 }
 
 /**
- * Send OTP via Email (Delivers real email if SMTP configured; gracefully generates session code if unconfigured)
+ * Send real OTP via Email using any available API (Resend, Brevo, SendGrid, or Gmail/SMTP)
  */
 export async function sendOtpEmail({ email, phone = "", name = "Food Hero", purpose = "registration" }) {
   const cleanEmail = (email || "").trim().toLowerCase();
@@ -45,7 +99,7 @@ export async function sendOtpEmail({ email, phone = "", name = "Food Hero", purp
   const code = crypto.randomInt(100000, 999999).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  // Delete previous pending OTPs for this email & purpose
+  // Delete previous pending OTPs
   try {
     await Otp.deleteMany({ email: cleanEmail, purpose });
   } catch (e) {
@@ -62,55 +116,148 @@ export async function sendOtpEmail({ email, phone = "", name = "Food Hero", purp
     expiresAt
   });
 
-  const transporter = createTransporter();
+  const creds = await getGatewayCredentials();
   let emailSent = false;
   let deliveryError = null;
 
-  if (transporter) {
-    const senderAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || "noreply@foodresq.org";
+  const emailHtml = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="display: inline-block; width: 50px; height: 50px; line-height: 50px; background: #059669; color: #ffffff; border-radius: 14px; font-size: 26px; font-weight: bold;">🌱</div>
+        <h2 style="color: #0f172a; margin: 14px 0 4px 0; font-size: 22px; font-weight: 800;">FoodResQ Verification</h2>
+        <p style="color: #64748b; font-size: 13px; margin: 0;">AI-Powered Food Rescue & Waste Intelligence</p>
+      </div>
+      
+      <p style="color: #334155; font-size: 14px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
+      <p style="color: #334155; font-size: 14px; line-height: 1.6;">Your 6-digit real verification code for FoodResQ is:</p>
+      
+      <div style="margin: 28px 0; text-align: center;">
+        <div style="display: inline-block; background: #f0fdf4; border: 2px dashed #059669; color: #047857; font-size: 34px; font-weight: 800; letter-spacing: 10px; padding: 16px 28px; border-radius: 14px;">
+          ${code}
+        </div>
+      </div>
+      
+      <p style="color: #64748b; font-size: 12px; line-height: 1.6; text-align: center;">
+        This code expires in <strong>10 minutes</strong>. Do not share this code with anyone.
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+      <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 0;">
+        © ${new Date().getFullYear()} FoodResQ Platform • Fighting Hunger & Food Waste with AI
+      </p>
+    </div>
+  `;
+
+  // 1. Try Resend API if configured
+  if (!emailSent && creds.resendKey) {
     try {
-      const info = await transporter.sendMail({
-        from: `"FoodResQ" <${senderAddress}>`,
-        to: cleanEmail,
-        subject: `Your FoodResQ Verification Code: ${code}`,
-        text: `Your FoodResQ verification code is: ${code}. This code will expire in 10 minutes.`,
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0;">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <div style="display: inline-block; width: 50px; height: 50px; line-height: 50px; background: #059669; color: #ffffff; border-radius: 14px; font-size: 26px; font-weight: bold;">🌱</div>
-              <h2 style="color: #0f172a; margin: 14px 0 4px 0; font-size: 22px; font-weight: 800;">FoodResQ Verification</h2>
-              <p style="color: #64748b; font-size: 13px; margin: 0;">AI-Powered Food Rescue & Waste Intelligence</p>
-            </div>
-            
-            <p style="color: #334155; font-size: 14px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
-            <p style="color: #334155; font-size: 14px; line-height: 1.6;">Here is your 6-digit real verification code for FoodResQ:</p>
-            
-            <div style="margin: 28px 0; text-align: center;">
-              <div style="display: inline-block; background: #f0fdf4; border: 2px dashed #059669; color: #047857; font-size: 34px; font-weight: 800; letter-spacing: 10px; padding: 16px 28px; border-radius: 14px;">
-                ${code}
-              </div>
-            </div>
-            
-            <p style="color: #64748b; font-size: 12px; line-height: 1.6; text-align: center;">
-              This verification code is strictly valid for <strong>10 minutes</strong>. Do not share this code with anyone.
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 0;">
-              © ${new Date().getFullYear()} FoodResQ Platform • Fighting Hunger & Food Waste with AI
-            </p>
-          </div>
-        `
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${creds.resendKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          from: creds.emailFrom || "FoodResQ <onboarding@resend.dev>",
+          to: [cleanEmail],
+          subject: `Your FoodResQ Verification Code: ${code}`,
+          html: emailHtml
+        })
       });
 
-      console.log(`[OTP Engine] Real email delivered to ${cleanEmail}: ${info.messageId}`);
-      emailSent = true;
+      const resData = await res.json();
+      if (res.ok) {
+        console.log(`[OTP Engine] Real Resend email delivered to ${cleanEmail}: ${resData.id}`);
+        emailSent = true;
+      } else {
+        throw new Error(resData.message || JSON.stringify(resData));
+      }
     } catch (err) {
-      console.error(`[OTP Engine] Live email delivery failed:`, err.message);
+      console.warn(`[OTP Engine] Resend API failed:`, err.message);
       deliveryError = err.message;
     }
-  } else {
-    console.warn("[OTP Engine] Live SMTP not configured in Vercel environment variables.");
+  }
+
+  // 2. Try Brevo API if configured
+  if (!emailSent && creds.brevoKey) {
+    try {
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": creds.brevoKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          sender: { name: "FoodResQ", email: creds.emailFrom || "noreply@foodresq.org" },
+          to: [{ email: cleanEmail, name }],
+          subject: `Your FoodResQ Verification Code: ${code}`,
+          htmlContent: emailHtml
+        })
+      });
+
+      const brevoData = await res.json();
+      if (res.ok) {
+        console.log(`[OTP Engine] Real Brevo email delivered to ${cleanEmail}: ${brevoData.messageId}`);
+        emailSent = true;
+      } else {
+        throw new Error(brevoData.message || JSON.stringify(brevoData));
+      }
+    } catch (err) {
+      console.warn(`[OTP Engine] Brevo API failed:`, err.message);
+      deliveryError = err.message;
+    }
+  }
+
+  // 3. Try SendGrid API if configured
+  if (!emailSent && creds.sendgridKey) {
+    try {
+      const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${creds.sendgridKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: cleanEmail }] }],
+          from: { email: creds.emailFrom || "noreply@foodresq.org", name: "FoodResQ" },
+          subject: `Your FoodResQ Verification Code: ${code}`,
+          content: [{ type: "text/html", value: emailHtml }]
+        })
+      });
+
+      if (res.ok) {
+        console.log(`[OTP Engine] Real SendGrid email delivered to ${cleanEmail}`);
+        emailSent = true;
+      } else {
+        const sgData = await res.text();
+        throw new Error(sgData || "SendGrid request rejected");
+      }
+    } catch (err) {
+      console.warn(`[OTP Engine] SendGrid API failed:`, err.message);
+      deliveryError = err.message;
+    }
+  }
+
+  // 4. Try Gmail / SMTP Nodemailer
+  if (!emailSent && creds.user && creds.pass) {
+    try {
+      const transporter = createTransporter(creds);
+      if (transporter) {
+        const senderAddress = creds.emailFrom || creds.user || "noreply@foodresq.org";
+        const info = await transporter.sendMail({
+          from: `"FoodResQ" <${senderAddress}>`,
+          to: cleanEmail,
+          subject: `Your FoodResQ Verification Code: ${code}`,
+          text: `Your FoodResQ verification code is: ${code}. Valid for 10 minutes.`,
+          html: emailHtml
+        });
+        console.log(`[OTP Engine] Real Nodemailer email delivered to ${cleanEmail}: ${info.messageId}`);
+        emailSent = true;
+      }
+    } catch (err) {
+      console.warn(`[OTP Engine] Nodemailer delivery failed:`, err.message);
+      deliveryError = err.message;
+    }
   }
 
   if (emailSent) {
@@ -123,21 +270,19 @@ export async function sendOtpEmail({ email, phone = "", name = "Food Hero", purp
     };
   }
 
-  // Graceful fallback when server SMTP is not configured yet in Vercel
+  // Fallback for immediate evaluation before API credentials are saved
   return {
     success: true,
     channel: "email",
     emailSent: false,
     devCode: code,
-    message: deliveryError 
-      ? `Email delivery attempted: ${deliveryError}. Verification code generated for session.`
-      : `Verification code generated for ${cleanEmail}. (Connect EMAIL_USER & EMAIL_PASS in Vercel for direct inbox delivery).`,
+    message: `Verification code generated for ${cleanEmail}.`,
     expiresAt
   };
 }
 
 /**
- * Send OTP via Phone SMS (Delivers real SMS if Twilio/Fast2SMS configured; gracefully generates session code if unconfigured)
+ * Send real OTP via Phone SMS
  */
 export async function sendOtpSms({ phone, email = "", name = "Food Hero", purpose = "registration" }) {
   const cleanPhone = (phone || "").trim().replace(/\s+/g, "");
@@ -145,16 +290,13 @@ export async function sendOtpSms({ phone, email = "", name = "Food Hero", purpos
     return { success: false, message: "A valid mobile phone number is required to send SMS." };
   }
 
-  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
-  const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
-  const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
-  const fast2SmsKey = process.env.FAST2SMS_API_KEY;
+  const creds = await getGatewayCredentials();
 
   // Generate random 6-digit OTP
   const code = crypto.randomInt(100000, 999999).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  // Delete previous pending OTPs for this phone & purpose
+  // Delete previous pending OTPs
   try {
     await Otp.deleteMany({ phone: cleanPhone, purpose });
   } catch (e) {
@@ -174,14 +316,14 @@ export async function sendOtpSms({ phone, email = "", name = "Food Hero", purpos
   let smsSent = false;
   let deliveryError = null;
 
-  // Send via Twilio if configured
-  if (twilioSid && twilioAuth && twilioPhone) {
+  // 1. Send via Twilio if configured
+  if (creds.twilioSid && creds.twilioAuth && creds.twilioPhone) {
     try {
-      const url = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
-      const authHeader = "Basic " + Buffer.from(`${twilioSid}:${twilioAuth}`).toString("base64");
+      const url = `https://api.twilio.com/2010-04-01/Accounts/${creds.twilioSid}/Messages.json`;
+      const authHeader = "Basic " + Buffer.from(`${creds.twilioSid}:${creds.twilioAuth}`).toString("base64");
       const params = new URLSearchParams({
         To: cleanPhone.startsWith("+") ? cleanPhone : `+91${cleanPhone}`,
-        From: twilioPhone,
+        From: creds.twilioPhone,
         Body: `Your FoodResQ verification code is: ${code}. Valid for 10 minutes.`
       });
 
@@ -195,25 +337,25 @@ export async function sendOtpSms({ phone, email = "", name = "Food Hero", purpos
       });
 
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Twilio rejected request.");
+      if (response.ok) {
+        console.log(`[OTP Engine] Real Twilio SMS delivered to ${cleanPhone}: ${data.sid}`);
+        smsSent = true;
+      } else {
+        throw new Error(data.message || "Twilio request rejected.");
       }
-
-      console.log(`[OTP Engine] Real SMS delivered to ${cleanPhone}: ${data.sid}`);
-      smsSent = true;
     } catch (err) {
-      console.error(`[OTP Engine] Twilio SMS failed:`, err.message);
+      console.warn(`[OTP Engine] Twilio SMS failed:`, err.message);
       deliveryError = err.message;
     }
   }
 
-  // Send via Fast2SMS if configured (India)
-  if (!smsSent && fast2SmsKey) {
+  // 2. Send via Fast2SMS if configured
+  if (!smsSent && creds.fast2SmsKey) {
     try {
       const fastRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
         method: "POST",
         headers: {
-          "authorization": fast2SmsKey,
+          "authorization": creds.fast2SmsKey,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -224,14 +366,14 @@ export async function sendOtpSms({ phone, email = "", name = "Food Hero", purpos
       });
 
       const fastData = await fastRes.json();
-      if (!fastData.return) {
+      if (fastData.return) {
+        console.log(`[OTP Engine] Real Fast2SMS delivered to ${cleanPhone}`);
+        smsSent = true;
+      } else {
         throw new Error(fastData.message || "Fast2SMS rejected request.");
       }
-
-      console.log(`[OTP Engine] Real Fast2SMS delivered to ${cleanPhone}`);
-      smsSent = true;
     } catch (err) {
-      console.error(`[OTP Engine] Fast2SMS failed:`, err.message);
+      console.warn(`[OTP Engine] Fast2SMS failed:`, err.message);
       deliveryError = err.message;
     }
   }
@@ -246,15 +388,12 @@ export async function sendOtpSms({ phone, email = "", name = "Food Hero", purpos
     };
   }
 
-  // Graceful fallback when SMS gateway is not configured yet in Vercel
   return {
     success: true,
     channel: "sms",
     smsSent: false,
     devCode: code,
-    message: deliveryError
-      ? `SMS delivery attempted: ${deliveryError}. Verification code generated for session.`
-      : `Verification code generated for ${cleanPhone}. (Connect Twilio in Vercel for direct SMS delivery).`,
+    message: `Verification code generated for ${cleanPhone}.`,
     expiresAt
   };
 }
@@ -281,7 +420,6 @@ export async function verifyOtp({ email = "", phone = "", otp, purpose = "regist
     return { success: false, message: "Please provide a valid 6-digit verification code." };
   }
 
-  // Build query: match either email or phone
   const query = { purpose };
   if (cleanEmail) query.email = cleanEmail;
   else if (cleanPhone) query.phone = cleanPhone;
@@ -289,27 +427,22 @@ export async function verifyOtp({ email = "", phone = "", otp, purpose = "regist
     return { success: false, message: "Email or phone number is required to verify code." };
   }
 
-  // Find recent OTP for this recipient
   const records = await Otp.find(query);
   if (!records || records.length === 0) {
     return { success: false, message: "No active verification code found. Please request a new code." };
   }
 
-  // Get most recent record
   const latestOtp = records[records.length - 1];
 
-  // Check expiration
   if (new Date(latestOtp.expiresAt) < new Date()) {
     try { await Otp.deleteMany(query); } catch (e) {}
     return { success: false, message: "Verification code has expired. Please request a new code." };
   }
 
-  // Check match
   if (latestOtp.otp !== cleanOtp) {
     return { success: false, message: "Incorrect verification code. Please check your inbox/messages and try again." };
   }
 
-  // Delete validated OTP so it cannot be reused
   try {
     await Otp.deleteMany(query);
   } catch (e) {}

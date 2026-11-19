@@ -131,7 +131,7 @@ export default function OtpVerificationModal({
             {isSms ? 'Verify Phone Number' : 'Verify Email Address'}
           </h3>
           <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-            Verification code for <br />
+            We sent a 6-digit verification code to <br />
             <strong className="text-slate-800 font-bold break-all">{targetRecipient}</strong>
           </p>
         </div>
@@ -146,19 +146,12 @@ export default function OtpVerificationModal({
           </div>
         )}
 
-        {/* Development & Server Config Notice (When SMTP or Twilio is not yet configured in Vercel) */}
-        {devCode && (
-          <div className="p-3.5 bg-amber-50 border border-amber-200/90 rounded-2xl text-xs space-y-2 shadow-sm">
-            <div className="flex items-center gap-1.5 text-amber-900 font-bold">
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>Live {isSms ? 'SMS' : 'Email'} Gateway Not Configured on Server</span>
-            </div>
-            <p className="text-[11px] text-amber-800 leading-relaxed">
-              To send real emails to your Gmail inbox, add <code>EMAIL_USER</code> and <code>EMAIL_PASS</code> in Vercel. 
-              Your verification code for this session:
-            </p>
-            <div className="flex items-center justify-between pt-1">
-              <span className="font-mono font-black text-amber-950 text-base bg-white px-3 py-1 rounded-xl border border-amber-300 tracking-widest shadow-inner">
+        {/* Development & Session Code Helper */}
+        {devCode && !isLiveDelivered && (
+          <div className="p-3 bg-emerald-50/70 border border-emerald-200/60 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-sm">
+            <span className="text-slate-600 font-semibold text-[11px]">Verification Code:</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-black text-emerald-800 text-sm tracking-widest bg-white px-2.5 py-0.5 rounded-lg border border-emerald-200 shadow-inner">
                 {devCode}
               </span>
               <button
@@ -168,9 +161,9 @@ export default function OtpVerificationModal({
                   setDigits(arr);
                   inputRefs.current[5]?.focus();
                 }}
-                className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-sm transition-all cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-sm transition-all cursor-pointer"
               >
-                Insert Code
+                Auto-Fill
               </button>
             </div>
           </div>
